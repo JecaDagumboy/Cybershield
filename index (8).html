@@ -1,0 +1,2794 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data:; connect-src 'none'; form-action 'none'; base-uri 'none'">
+  <meta name="theme-color" content="#060a13">
+  <title>CyberShield – Web Security Awareness System</title>
+  <style>
+/* CyberShield – shared theme */
+:root {
+  --bg: #060a13; --bg2: #0a1120; --card: #0e1628; --card2: #121c33; --line: #1c2a47;
+  --green: #00ff9c; --blue: #00b4ff; --red: #ff4d6d; --amber: #ffc857;
+  --text: #e6f1ff; --muted: #8aa0c2; --radius: 14px;
+  --glow-g: 0 0 18px rgba(91,224,164,.35); --glow-b: 0 0 18px rgba(106,174,255,.35);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: 'Segoe UI', system-ui, -apple-system, Roboto, sans-serif; color: var(--text); background: var(--bg);
+  min-height: 100vh; line-height: 1.5; overflow-x: hidden;
+  background-image:
+    linear-gradient(rgba(91,224,164,.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(106,174,255,.04) 1px, transparent 1px);
+  background-size: 40px 40px; animation: gridMove 20s linear infinite;
+}
+@keyframes gridMove { to { background-position: 40px 40px, 40px 40px; } }
+body::before { content: ''; position: fixed; inset: 0; background: radial-gradient(circle at 20% 10%, rgba(106,174,255,.12), transparent 45%), radial-gradient(circle at 85% 90%, rgba(91,224,164,.10), transparent 45%); pointer-events: none; z-index: -1; }
+a { color: var(--blue); text-decoration: none; }
+h1, h2, h3 { line-height: 1.2; }
+.mono { font-family: 'Consolas', 'Courier New', monospace; }
+.grad { background: linear-gradient(90deg, var(--green), var(--blue)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+
+/* buttons & forms */
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 12px 20px; border: 0; border-radius: 10px; font-weight: 700; font-size: 1rem; cursor: pointer; color: #021018; background: linear-gradient(90deg, var(--green), var(--blue)); transition: transform .15s, box-shadow .15s; }
+.btn:hover { transform: translateY(-2px); box-shadow: var(--glow-g); }
+.btn:disabled { opacity: .5; cursor: not-allowed; transform: none; box-shadow: none; }
+.btn.ghost { background: transparent; color: var(--green); border: 1px solid var(--green); }
+.btn.sm { padding: 8px 14px; font-size: .9rem; }
+label { display: block; font-size: .85rem; color: var(--muted); margin: 14px 0 6px; }
+input, select { width: 100%; padding: 12px 14px; border-radius: 10px; border: 1px solid var(--line); background: var(--bg2); color: var(--text); font-size: 1rem; outline: none; transition: border-color .2s, box-shadow .2s; }
+input:focus, select:focus { border-color: var(--green); box-shadow: var(--glow-g); }
+.alert { margin-top: 14px; padding: 10px 14px; border-radius: 10px; font-size: .9rem; display: none; }
+.alert.show { display: block; animation: pop .25s; }
+.alert.err { background: rgba(255,133,149,.12); border: 1px solid var(--red); color: #ff9db0; }
+.alert.ok { background: rgba(91,224,164,.1); border: 1px solid var(--green); color: var(--green); }
+@keyframes pop { from { opacity: 0; transform: translateY(-6px); } }
+
+/* auth page */
+.auth-wrap { min-height: 100vh; display: grid; place-items: center; padding: 20px; }
+.auth-card { width: 100%; max-width: 440px; background: rgba(14,22,40,.92); border: 1px solid var(--line); border-radius: 18px; padding: 28px; box-shadow: 0 10px 50px rgba(0,0,0,.5), var(--glow-b); animation: rise .6s ease; }
+@keyframes rise { from { opacity: 0; transform: translateY(24px); } }
+.brand { text-align: center; margin-bottom: 18px; }
+.brand .shield { font-size: 3rem; animation: float 3s ease-in-out infinite; display: inline-block; filter: drop-shadow(0 0 12px var(--green)); }
+@keyframes float { 50% { transform: translateY(-8px); } }
+.brand h1 { font-size: 1.8rem; letter-spacing: 1px; }
+.brand p { color: var(--muted); font-size: .9rem; }
+.tabs { display: flex; background: var(--bg2); border-radius: 10px; padding: 4px; margin-bottom: 6px; }
+.tabs button { flex: 1; padding: 10px; border: 0; background: none; color: var(--muted); font-weight: 600; border-radius: 8px; cursor: pointer; font-size: .95rem; }
+.tabs button.active { background: var(--card2); color: var(--green); box-shadow: inset 0 0 0 1px var(--line); }
+.row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.meter { display: flex; gap: 4px; margin-top: 8px; }
+.meter i { flex: 1; height: 5px; border-radius: 3px; background: var(--line); transition: background .25s; }
+.meter[data-s="1"] i:nth-child(-n+1) { background: var(--red); }
+.meter[data-s="2"] i:nth-child(-n+2) { background: var(--amber); }
+.meter[data-s="3"] i:nth-child(-n+3) { background: var(--blue); }
+.meter[data-s="4"] i { background: var(--green); }
+.hint { font-size: .78rem; color: var(--muted); margin-top: 6px; }
+.demo-box { margin-top: 18px; padding: 12px; border: 1px dashed var(--line); border-radius: 10px; font-size: .8rem; color: var(--muted); }
+.demo-box b { color: var(--green); }
+.linkbtn { background: none; border: 0; color: var(--blue); cursor: pointer; font-size: .8rem; text-decoration: underline; }
+.hidden { display: none !important; }
+
+/* app shell */
+.topbar { position: sticky; top: 0; z-index: 30; display: flex; align-items: center; gap: 14px; padding: 12px 20px; background: rgba(6,10,19,.88); backdrop-filter: blur(10px); border-bottom: 1px solid var(--line); }
+.topbar .logo { font-weight: 800; font-size: 1.15rem; letter-spacing: .5px; }
+.topbar .spacer { flex: 1; }
+.chip { display: flex; align-items: center; gap: 8px; padding: 6px 12px; border: 1px solid var(--line); border-radius: 999px; background: var(--card); font-size: .85rem; }
+.avatar { width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; font-weight: 800; color: #021018; background: linear-gradient(135deg, var(--green), var(--blue)); }
+.menu-btn { display: none; background: none; border: 1px solid var(--line); color: var(--text); font-size: 1.3rem; border-radius: 8px; padding: 4px 10px; cursor: pointer; }
+.layout { display: grid; grid-template-columns: 230px 1fr; min-height: calc(100vh - 58px); }
+.sidebar { padding: 18px 12px; border-right: 1px solid var(--line); background: rgba(10,17,32,.7); }
+.sidebar a { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 10px; color: var(--muted); font-size: .95rem; margin-bottom: 4px; transition: all .2s; }
+.sidebar a:hover, .sidebar a.active { background: var(--card2); color: var(--green); }
+.sidebar a.soon { opacity: .55; cursor: not-allowed; }
+.sidebar small { margin-left: auto; font-size: .65rem; padding: 2px 6px; border-radius: 6px; background: var(--line); }
+.sidebar hr { border: 0; border-top: 1px solid var(--line); margin: 12px 0; }
+main { padding: 24px; max-width: 1150px; width: 100%; }
+.hello h2 { font-size: 1.7rem; }
+.hello p { color: var(--muted); margin-top: 4px; }
+
+/* cards */
+.grid { display: grid; gap: 16px; margin-top: 20px; }
+.stats { grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); }
+.cols { grid-template-columns: 1.3fr 1fr; }
+.card { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 18px; transition: transform .2s, border-color .2s, box-shadow .2s; animation: rise .5s ease backwards; }
+.card.hover:hover { transform: translateY(-4px); border-color: var(--green); box-shadow: var(--glow-g); }
+.card h3 { font-size: 1.05rem; margin-bottom: 12px; }
+.stat .num { font-size: 2rem; font-weight: 800; }
+.stat .lbl { color: var(--muted); font-size: .85rem; }
+.ring { --p: 0; width: 120px; height: 120px; border-radius: 50%; display: grid; place-items: center; margin: 0 auto 8px; background: conic-gradient(var(--green) calc(var(--p) * 1%), var(--line) 0); transition: background .6s; }
+.ring span { width: 98px; height: 98px; border-radius: 50%; background: var(--card); display: grid; place-items: center; font-size: 1.5rem; font-weight: 800; }
+.bar { height: 8px; border-radius: 6px; background: var(--line); overflow: hidden; margin-top: 8px; }
+.bar i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, var(--green), var(--blue)); transition: width .8s ease; }
+.mods { grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); }
+.mod .ico { font-size: 2rem; }
+.mod h4 { margin: 6px 0 4px; }
+.mod p { color: var(--muted); font-size: .85rem; min-height: 40px; }
+.tag { display: inline-block; font-size: .7rem; padding: 3px 8px; border-radius: 999px; border: 1px solid var(--line); color: var(--muted); margin-top: 10px; }
+.tag.done { color: var(--green); border-color: var(--green); }
+.tag.pts { color: var(--blue); border-color: var(--blue); }
+.badges { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 10px; }
+.badge { text-align: center; padding: 10px 6px; border-radius: 12px; background: var(--bg2); border: 1px solid var(--line); font-size: .72rem; }
+.badge .b { font-size: 1.8rem; display: block; }
+.badge.locked { filter: grayscale(1); opacity: .35; }
+.badge.earned { border-color: var(--green); box-shadow: var(--glow-g); }
+.list { list-style: none; }
+.list li { display: flex; gap: 10px; align-items: center; padding: 9px 0; border-bottom: 1px solid var(--line); font-size: .9rem; }
+.list li:last-child { border: 0; }
+.list .time { margin-left: auto; color: var(--muted); font-size: .75rem; white-space: nowrap; }
+.rank { width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; font-size: .75rem; font-weight: 800; background: var(--line); }
+.rank.r1 { background: var(--amber); color: #111; } .rank.r2 { background: #c0c8d6; color: #111; } .rank.r3 { background: #d08c5a; color: #111; }
+.me { color: var(--green); font-weight: 700; }
+.empty { color: var(--muted); font-size: .9rem; }
+.toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: var(--card2); border: 1px solid var(--green); color: var(--green); padding: 10px 18px; border-radius: 10px; z-index: 99; box-shadow: var(--glow-g); animation: pop .3s; }
+
+@media (max-width: 860px) {
+  .layout { grid-template-columns: 1fr; }
+  .sidebar { position: fixed; top: 58px; left: 0; bottom: 0; width: 240px; z-index: 25; transform: translateX(-100%); transition: transform .25s; background: var(--bg2); }
+  .sidebar.open { transform: none; }
+  .menu-btn { display: block; }
+  .cols { grid-template-columns: 1fr; }
+  main { padding: 16px; }
+  .chip .nm { display: none; }
+}
+@media (max-width: 420px) { .row2 { grid-template-columns: 1fr; } .auth-card { padding: 20px; } }
+@media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+.btn.full { width: 100%; margin-top: 18px; }
+
+
+/* ================= additions for the full application ================= */
+input[type=checkbox], input[type=radio] { width: auto; accent-color: var(--green); transform: scale(1.15); margin: 0; flex: none; }
+input[type=number] { -moz-appearance: textfield; }
+input[type=search] { -webkit-appearance: none; }
+input[type=file] { padding: 9px; }
+textarea { width: 100%; padding: 12px 14px; border-radius: 10px; border: 1px solid var(--line); background: var(--bg2); color: var(--text); font-size: .95rem; outline: none; resize: vertical; font-family: inherit; }
+textarea:focus { border-color: var(--green); box-shadow: var(--glow-g); }
+textarea.mono { font-family: 'Consolas', 'Courier New', monospace; font-size: .85rem; }
+label.chk, .chk { display: flex; align-items: center; gap: 10px; margin: 8px 0; color: var(--text); font-size: .92rem; cursor: pointer; }
+.fld { margin: 0; }
+.center { text-align: center; }
+.muted { color: var(--muted); }
+.btn.danger { background: linear-gradient(90deg, #ff4d6d, #ff8a5c); color: #1a0309; }
+.btn.danger:hover { box-shadow: 0 0 18px rgba(255,133,149,.45); }
+.btn.ghost.sm, .btn.sm { padding: 8px 14px; }
+.btn-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 14px; justify-content: flex-end; }
+.btn-row.left { justify-content: flex-start; margin: 10px 0; }
+a.btn { text-decoration: none; }
+h2 { font-size: 1.6rem; margin-bottom: 4px; }
+h4 { margin: 14px 0 6px; }
+main > div > h2 { margin-bottom: 6px; }
+.stack { display: grid; gap: 16px; align-content: start; }
+.grid.mods.flat { margin-top: 0; }
+a.card.mod { color: var(--text); display: block; }
+.mod .bar { margin: 10px 0 4px; }
+.mod-head { display: flex; align-items: center; gap: 14px; margin-bottom: 12px; }
+.ico.big { font-size: 2.6rem; filter: drop-shadow(0 0 10px rgba(91,224,164,.4)); }
+.bar.thick { height: 10px; margin: 8px 0 2px; }
+.banner { padding: 12px 14px; border-radius: 10px; margin-bottom: 14px; border: 1px solid var(--blue); background: rgba(106,174,255,.08); font-size: .9rem; }
+.banner.bad { border-color: var(--red); background: rgba(255,133,149,.1); color: #ffb3c0; }
+.hint.center { margin-top: 14px; }
+.auth-card form { margin-top: 4px; }
+.auth-card .alert { margin-top: 12px; }
+
+/* lessons + code */
+.lesson-card summary { cursor: pointer; font-weight: 700; font-size: 1.05rem; list-style: none; }
+.lesson-card summary::-webkit-details-marker { display: none; }
+.lesson { margin-top: 10px; font-size: .95rem; }
+.lesson h4 { color: var(--green); margin: 16px 0 6px; }
+.lesson p { margin: 6px 0; color: #cfe0f5; }
+.lesson ul { margin: 6px 0 6px 20px; color: #cfe0f5; }
+.lesson li { margin: 3px 0; }
+.codebox { background: #050810; border: 1px solid var(--line); border-radius: 10px; padding: 12px; font-family: 'Consolas', 'Courier New', monospace; font-size: .82rem; color: #b6ffe0; overflow-x: auto; white-space: pre-wrap; word-break: break-word; margin: 8px 0; }
+.codebox .inj { background: rgba(243,203,122,.2); color: var(--amber); border-radius: 4px; padding: 0 2px; outline: 1px dashed var(--amber); }
+.codebox .ph { background: rgba(106,174,255,.2); color: var(--blue); border-radius: 4px; padding: 0 3px; }
+code { font-family: 'Consolas', 'Courier New', monospace; background: #050810; padding: 2px 6px; border-radius: 6px; color: var(--green); }
+
+/* challenges */
+.chal { margin-top: 16px; }
+.chal-head { display: flex; gap: 10px; align-items: flex-start; justify-content: space-between; margin-bottom: 8px; }
+.chal-head h3 { margin: 0; }
+.prompt { color: #cfe0f5; margin-bottom: 10px; }
+.pill { display: inline-block; font-size: .72rem; padding: 3px 10px; border-radius: 999px; border: 1px solid var(--line); color: var(--muted); white-space: nowrap; }
+.pill.ok { color: var(--green); border-color: var(--green); background: rgba(91,224,164,.08); }
+.pill.bad { color: var(--red); border-color: var(--red); background: rgba(255,133,149,.08); }
+.pill.warn { color: var(--amber); border-color: var(--amber); }
+.opts { display: grid; gap: 8px; }
+.opt { display: flex; gap: 10px; align-items: flex-start; padding: 11px 14px; margin: 0; border: 1px solid var(--line); border-radius: 10px; background: var(--bg2); cursor: pointer; color: var(--text); font-size: .95rem; transition: border-color .2s, background .2s; }
+.opt:hover { border-color: var(--blue); }
+.opt input { margin-top: 3px; }
+.opt.right { border-color: var(--green); background: rgba(91,224,164,.1); }
+.opt.wrong { border-color: var(--red); background: rgba(255,133,149,.1); }
+.out { margin-top: 12px; }
+.feedback { padding: 10px 14px; border-radius: 10px; margin: 8px 0; font-size: .92rem; }
+.feedback.good { border: 1px solid var(--green); background: rgba(91,224,164,.08); color: var(--green); }
+.feedback.bad { border: 1px solid var(--red); background: rgba(255,133,149,.08); color: #ff9db0; }
+.expl { color: #cfe0f5; font-size: .9rem; border-left: 3px solid var(--blue); padding-left: 10px; margin: 8px 0; }
+.flagres { font-size: .88rem; display: grid; gap: 4px; margin: 6px 0; }
+
+/* phishing mockups */
+.email { border: 1px solid var(--line); border-radius: 12px; overflow: hidden; background: #fff; color: #1b2433; margin: 8px 0; }
+.email-head { background: #eef2f8; padding: 10px 14px; font-size: .85rem; border-bottom: 1px solid #d7deea; display: grid; gap: 2px; word-break: break-word; }
+.email-body { padding: 14px; font-size: .92rem; }
+.email-body p { margin: 8px 0; color: #1b2433; }
+.attach { display: inline-block; padding: 6px 10px; border: 1px solid #c8d1e0; border-radius: 8px; background: #f6f8fb; font-size: .85rem; }
+.fakelink { color: #1a5fd1 !important; text-decoration: underline; cursor: pointer; word-break: break-all; }
+.sms { max-width: 420px; margin: 8px 0; }
+.sms-from { font-size: .8rem; color: var(--muted); margin-bottom: 6px; }
+.bubble { background: #1d2a44; border-radius: 16px 16px 16px 4px; padding: 10px 14px; font-size: .92rem; }
+.bubble p { margin: 4px 0; }
+.bubble .fakelink { color: #6ab4ff !important; }
+.addr { display: flex; gap: 10px; align-items: center; padding: 12px 14px; background: #050810; border: 1px solid var(--line); border-radius: 999px; font-family: 'Consolas', monospace; font-size: .9rem; word-break: break-all; margin: 8px 0; }
+.addr .fakelink { color: var(--text) !important; text-decoration: none; }
+.linkstatus { font-size: .82rem; color: var(--amber); margin: 8px 0; padding: 8px 12px; background: rgba(243,203,122,.07); border-radius: 8px; word-break: break-all; }
+.flagbox { margin: 10px 0; }
+.flagbox summary { cursor: pointer; color: var(--blue); font-size: .9rem; }
+.chks { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 2px 14px; margin-top: 6px; }
+
+/* sql + cookie forms */
+.sqlform { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 0 14px; }
+.qline { margin: 10px 0 4px; }
+.cookie-form { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 4px 14px; align-items: end; margin: 8px 0; }
+.scenario { padding: 10px 14px; border-radius: 10px; background: rgba(106,174,255,.07); border: 1px solid rgba(106,174,255,.3); font-size: .93rem; }
+.fieldres { list-style: none; margin: 6px 0; display: grid; gap: 3px; font-size: .9rem; }
+.fieldres .ok { color: var(--green); } .fieldres .bad { color: var(--red); }
+.simrow { padding: 10px 14px; border-radius: 10px; margin: 8px 0; font-size: .9rem; }
+.simrow.ok { border: 1px solid var(--green); background: rgba(91,224,164,.07); }
+.simrow.bad { border: 1px solid var(--red); background: rgba(255,133,149,.07); }
+.steps2 { margin: 8px 0 8px 20px; font-size: .9rem; color: #cfe0f5; display: grid; gap: 4px; }
+
+/* csrf lab */
+.seg { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+.lab-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.site { border: 1px solid var(--line); border-radius: 12px; overflow: hidden; background: var(--bg2); }
+.site-bar { padding: 8px 12px; font-size: .8rem; font-family: 'Consolas', monospace; background: #050810; border-bottom: 1px solid var(--line); color: var(--muted); }
+.site-body { padding: 14px; }
+.site.evil { border-color: rgba(255,133,149,.5); }
+.site.evil .site-bar { color: #ff9db0; }
+.big-num { font-size: 2rem; font-weight: 800; }
+.tokenbox { margin: 10px 0; padding: 8px 12px; border-radius: 8px; border: 1px dashed var(--green); font-size: .85rem; color: var(--green); }
+.tokenbox.warn { border-color: var(--red); color: #ff9db0; }
+.reqbox { margin-top: 12px; }
+.cols2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 12px; }
+.steps { list-style: none; display: grid; gap: 6px; margin-top: 6px; font-size: .9rem; }
+.steps .ok { color: var(--green); }
+.logl li { font-size: .82rem; gap: 8px; }
+.logl li.bad { color: #ff9db0; }
+.logl .who { font-family: 'Consolas', monospace; color: var(--blue); min-width: 84px; }
+
+/* tables, toolbars, pagers, modals */
+.tbl-wrap { overflow-x: auto; }
+.tbl { width: 100%; border-collapse: collapse; font-size: .88rem; }
+.tbl th { text-align: left; color: var(--muted); font-weight: 600; font-size: .75rem; text-transform: uppercase; letter-spacing: .5px; padding: 8px 10px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+.tbl td { padding: 10px; border-bottom: 1px solid var(--line); vertical-align: middle; word-break: break-word; }
+.tbl tr:hover td { background: rgba(255,255,255,.02); }
+.row-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+.pager { display: flex; gap: 12px; align-items: center; justify-content: center; margin-top: 14px; font-size: .85rem; color: var(--muted); }
+.toolbar { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 10px; margin: 12px 0; }
+.inline-form { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin: 12px 0; }
+.inline-form input, .inline-form select { width: auto; flex: 1 1 140px; }
+.chips { display: flex; gap: 8px; flex-wrap: wrap; margin: 8px 0; }
+.chip2 { border: 1px solid var(--green); color: var(--green); border-radius: 999px; padding: 3px 10px; font-size: .8rem; display: inline-flex; gap: 6px; align-items: center; }
+.x { background: none; border: 0; color: var(--muted); cursor: pointer; font-size: 1rem; }
+.x:hover { color: var(--red); }
+.kv { display: grid; grid-template-columns: max-content 1fr; gap: 6px 18px; font-size: .9rem; margin-bottom: 12px; }
+.kv span { color: var(--muted); }
+.kv b { word-break: break-word; }
+.code-big { font-family: 'Consolas', monospace; font-size: 1.8rem; letter-spacing: 4px; text-align: center; padding: 14px; border: 1px dashed var(--green); border-radius: 12px; color: var(--green); margin: 12px 0; user-select: all; }
+.modal-back { position: fixed; inset: 0; background: rgba(2,5,12,.78); backdrop-filter: blur(4px); display: grid; place-items: start center; padding: 24px 12px; overflow-y: auto; z-index: 80; animation: pop .2s; }
+.modal { width: 100%; max-width: 480px; background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 20px; box-shadow: 0 10px 50px rgba(0,0,0,.6), var(--glow-b); }
+.modal.wide { max-width: 860px; }
+.modal-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+.modal-head h3 { margin: 0; }
+.plain { margin-left: 20px; display: grid; gap: 8px; font-size: .92rem; color: #cfe0f5; }
+.cols2g { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; margin-top: 14px; align-items: start; }
+
+/* charts, achievements, misc */
+.bars { display: flex; align-items: flex-end; gap: 6px; height: 160px; padding-top: 18px; }
+.bcol { flex: 1; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; height: 100%; position: relative; }
+.bfill { width: 100%; min-height: 3px; background: linear-gradient(0deg, var(--green), var(--blue)); border-radius: 5px 5px 0 0; transition: height .6s; }
+.bval { font-size: .7rem; color: var(--muted); }
+.blbl { font-size: .62rem; color: var(--muted); margin-top: 4px; }
+.ach-grid { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); }
+.ach { text-align: center; }
+.ach.locked { opacity: .5; filter: grayscale(.8); }
+.ach.earned { border-color: var(--green); box-shadow: var(--glow-g); }
+.ach-ico { font-size: 2.4rem; }
+.ach p { color: var(--muted); font-size: .85rem; min-height: 38px; }
+.big-score { font-size: 3rem; font-weight: 800; text-align: center; }
+.me-rank { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+.notif li { cursor: pointer; justify-content: space-between; }
+.notif li.unread { border-left: 3px solid var(--green); padding-left: 10px; background: rgba(91,224,164,.04); }
+.nav-badge { margin-left: auto; background: var(--red); color: #fff; border-radius: 999px; padding: 1px 7px; font-size: .7rem; }
+.toast.bad { border-color: var(--red); color: #ff9db0; box-shadow: 0 0 18px rgba(255,133,149,.35); }
+.pts-chip b { color: var(--green); }
+.linkbtn { background: none; border: 0; color: var(--blue); cursor: pointer; font-size: .85rem; text-decoration: underline; padding: 4px 0; }
+a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible, summary:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+
+@media (max-width: 860px) {
+  .lab-grid, .cols2 { grid-template-columns: 1fr; }
+  .kv { grid-template-columns: 1fr; gap: 0; }
+  .kv b { margin-bottom: 6px; }
+  .chip.pts-chip { padding: 6px 10px; }
+  .sidebar { overflow-y: auto; }
+}
+@media (max-width: 520px) {
+  .topbar { gap: 8px; padding: 10px 12px; }
+  .topbar .logo { font-size: 1rem; }
+  .topbar .chip:not(.pts-chip) { display: none; }
+  .topbar .btn.sm { padding: 8px 10px; }
+  main { padding: 14px 12px; }
+  .chal-head { flex-direction: column; gap: 6px; }
+}
+
+.reqs { list-style: none; display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: .78rem; color: var(--muted); margin: 8px 0 4px; }
+.reqs .ok { color: var(--green); }
+
+/* ===== never let content push the page wider than the screen ===== */
+.layout { grid-template-columns: 230px minmax(0, 1fr); }
+main, .card, .stack, .toolbar > * { min-width: 0; }
+.row-actions .btn { white-space: nowrap; }
+.board li { gap: 12px; }
+.board li.mine { background: rgba(91,224,164,.06); border-radius: 10px; padding-left: 8px; }
+.who2 { flex: 1; min-width: 0; }
+.who2 b { display: block; overflow: hidden; text-overflow: ellipsis; }
+.board .pts { color: var(--green); font-weight: 700; font-size: .95rem; }
+
+@media (max-width: 860px) {
+  .layout { grid-template-columns: minmax(0, 1fr); }
+  .cols, .cols2g { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* ===== tables become tidy stacked cards on phones ===== */
+@media (max-width: 760px) {
+  .tbl-wrap { overflow: visible; }
+  .tbl, .tbl tbody { display: block; width: 100%; }
+  .tbl thead { display: none; }
+  .tbl tr { display: block; background: var(--card2); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; margin-bottom: 12px; }
+  .tbl tr:hover td { background: none; }
+  .tbl td { display: flex; justify-content: space-between; align-items: center; gap: 14px; padding: 6px 0; border: 0; text-align: right; }
+  .tbl td::before { content: attr(data-label); color: var(--muted); font-size: .7rem; text-transform: uppercase; letter-spacing: .5px; text-align: left; flex: none; }
+  .tbl td.c-first { display: block; text-align: left; font-size: 1rem; padding: 0 0 10px; margin-bottom: 6px; border-bottom: 1px solid var(--line); }
+  .tbl td.c-first::before, .tbl td.c-act::before, .tbl td.empty::before { display: none; }
+  .tbl td.c-act { display: block; padding-top: 10px; }
+  .tbl td.c-act .row-actions { display: grid; grid-template-columns: repeat(auto-fit, minmax(84px, 1fr)); gap: 8px; }
+  .tbl td.c-act .btn { width: 100%; text-align: center; padding: 10px 6px; }
+  .tbl td.empty { display: block; text-align: center; }
+  .tbl td > div { text-align: right; }
+  .tbl td.c-first > div { text-align: left; }
+  .toolbar { grid-template-columns: 1fr 1fr; }
+  .toolbar input[type=search] { grid-column: 1 / -1; }
+  .btn-row.left .btn { flex: 1 1 140px; }
+  .kv { grid-template-columns: 1fr; }
+}
+
+/* =====================================================================
+   CALM THEME – softer colours, no glare, bigger text, more space
+   ===================================================================== */
+:root {
+  --bg: #0f1624; --bg2: #141d2e; --card: #182236; --card2: #1e2a42; --line: #2b3956;
+  --green: #5be0a4; --blue: #6aaeff; --red: #ff8595; --amber: #f3cb7a;
+  --text: #eaf0f8; --muted: #a3b1c7;
+  --glow-g: 0 4px 18px rgba(0,0,0,.25); --glow-b: 0 8px 30px rgba(0,0,0,.35);
+  --radius: 16px;
+}
+body { background: var(--bg); background-image: none; animation: none; font-size: 16px; line-height: 1.55; }
+body::before { background: radial-gradient(900px 500px at 15% -5%, rgba(106,174,255,.10), transparent 60%), radial-gradient(800px 500px at 100% 100%, rgba(91,224,164,.07), transparent 60%); }
+.grad { background: linear-gradient(90deg, #7be8b4, #86bcff); -webkit-background-clip: text; background-clip: text; color: transparent; }
+h1, h2, h3 { letter-spacing: -.01em; }
+h2 { font-size: 1.7rem; margin-bottom: 6px; }
+h3 { font-size: 1.08rem; }
+
+/* surfaces */
+.card { padding: 20px; border-radius: var(--radius); box-shadow: 0 1px 0 rgba(255,255,255,.03) inset; }
+.card.hover:hover, a.card.mod:hover { transform: translateY(-2px); border-color: #3f5a86; box-shadow: 0 8px 24px rgba(0,0,0,.28); }
+.topbar { background: rgba(15,22,36,.92); }
+.sidebar { background: #121a2a; padding: 16px 12px; }
+.sidebar a { padding: 11px 14px; font-size: .97rem; border-radius: 10px; border-left: 3px solid transparent; }
+.sidebar a:hover { background: var(--card); color: var(--text); }
+.sidebar a.active { background: var(--card2); color: var(--green); border-left-color: var(--green); font-weight: 600; }
+.auth-card { background: var(--card); box-shadow: var(--glow-b); }
+.brand .shield { filter: none; animation: none; }
+.hello p, .muted { color: var(--muted); }
+
+/* buttons: calm solid colours */
+.btn { background: var(--green); color: #07140e; border-radius: 12px; font-weight: 700; padding: 12px 20px; box-shadow: none; }
+.btn:hover { transform: none; box-shadow: none; filter: brightness(1.08); }
+.btn.ghost { background: transparent; color: var(--text); border: 1px solid #3a4a6b; }
+.btn.ghost:hover { border-color: var(--green); color: var(--green); filter: none; }
+.btn.danger { background: transparent; color: var(--red); border: 1px solid rgba(255,133,149,.5); }
+.btn.danger:hover { background: rgba(255,133,149,.12); box-shadow: none; filter: none; }
+.btn.sm { padding: 9px 14px; font-size: .92rem; border-radius: 10px; }
+input, select, textarea { background: #101828; border: 1px solid #33425f; border-radius: 12px; padding: 13px 14px; }
+input:focus, select:focus, textarea:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(106,174,255,.2); }
+label { color: var(--muted); }
+::placeholder { color: #6f7f99; }
+
+/* tags, pills, feedback */
+.tag, .pill { border-color: #3a4a6b; color: var(--muted); }
+.pill.ok, .tag.done { color: var(--green); border-color: rgba(91,224,164,.5); background: rgba(91,224,164,.10); }
+.pill.bad { color: var(--red); border-color: rgba(255,133,149,.5); background: rgba(255,133,149,.10); }
+.pill.warn { color: var(--amber); border-color: rgba(243,203,122,.5); background: rgba(243,203,122,.10); }
+.tag.pts { color: var(--blue); border-color: rgba(106,174,255,.45); }
+.feedback.good { color: #9af0c8; border-color: rgba(91,224,164,.45); background: rgba(91,224,164,.09); }
+.feedback.bad { color: #ffb8c2; border-color: rgba(255,133,149,.45); background: rgba(255,133,149,.09); }
+.alert.ok { color: #9af0c8; border-color: rgba(91,224,164,.5); background: rgba(91,224,164,.09); }
+.alert.err { color: #ffb8c2; border-color: rgba(255,133,149,.5); background: rgba(255,133,149,.09); }
+.expl { border-left-color: var(--blue); color: #d5e0f0; }
+.opt { background: var(--bg2); border-color: #33425f; }
+.opt:hover { border-color: var(--blue); }
+.opt.right { border-color: var(--green); background: rgba(91,224,164,.12); }
+.opt.wrong { border-color: var(--red); background: rgba(255,133,149,.12); }
+.bar { background: #263552; } .bar i { background: linear-gradient(90deg, #5be0a4, #6aaeff); }
+.ring { background: conic-gradient(var(--green) calc(var(--p) * 1%), #263552 0); }
+.ring span { background: var(--card); }
+.badge { background: var(--bg2); } .badge.earned { border-color: rgba(91,224,164,.6); box-shadow: none; background: rgba(91,224,164,.08); }
+.ach.earned { border-color: rgba(91,224,164,.6); box-shadow: none; }
+.rank { background: #2b3956; }
+.codebox { background: #0d1422; color: #c4f5de; border-color: #2b3956; }
+code { background: #0d1422; color: var(--green); }
+.lesson h4 { color: var(--green); }
+.lesson p, .lesson ul, .prompt { color: #d5e0f0; }
+.chip { background: var(--card); border-color: #33425f; }
+.avatar { background: var(--green); color: #07140e; }
+.toast { background: #22304c; border-color: var(--green); color: #d9fbe9; box-shadow: 0 8px 24px rgba(0,0,0,.4); }
+.toast.bad { border-color: var(--red); color: #ffd0d6; box-shadow: 0 8px 24px rgba(0,0,0,.4); }
+.banner { background: rgba(106,174,255,.10); border-color: rgba(106,174,255,.45); }
+.banner.bad { background: rgba(255,133,149,.10); border-color: rgba(255,133,149,.5); color: #ffc3cb; }
+.modal { background: var(--card); box-shadow: 0 20px 60px rgba(0,0,0,.55); }
+.tokenbox { border-color: rgba(91,224,164,.5); } .tokenbox.warn { border-color: rgba(255,133,149,.5); color: #ffb8c2; }
+.site.evil { border-color: rgba(255,133,149,.45); }
+.linkstatus { background: rgba(243,203,122,.08); color: var(--amber); }
+.scenario { background: rgba(106,174,255,.08); border-color: rgba(106,174,255,.35); }
+.simrow.ok { border-color: rgba(91,224,164,.5); background: rgba(91,224,164,.08); }
+.simrow.bad { border-color: rgba(255,133,149,.5); background: rgba(255,133,149,.08); }
+.bfill { background: linear-gradient(0deg, #5be0a4, #6aaeff); }
+.tbl th { color: var(--muted); } .tbl td { border-bottom-color: #26324b; }
+.code-big { border-color: rgba(91,224,164,.5); color: var(--green); }
+
+/* ---- admin lists: tidy cards on phones ---- */
+@media (max-width: 760px) {
+  .tbl tr { background: var(--card2); border-color: #33425f; padding: 14px 16px; border-radius: 14px; }
+  .tbl td { padding: 7px 0; font-size: .95rem; }
+  .tbl td.c-first { font-size: 1.05rem; line-height: 1.35; padding-bottom: 12px; }
+  .tbl td.c-first .hint { font-size: .85rem; margin-top: 3px; }
+  .tbl td.c-act .btn { padding: 11px 6px; font-size: .92rem; }
+  .btn-row.left .btn { flex: 1 1 100%; }
+  h2 { font-size: 1.5rem; }
+  .card { padding: 16px; }
+}
+
+@media (max-width: 760px) {
+  .stats { grid-template-columns: 1fr 1fr; gap: 10px; }
+  .stat.card { padding: 14px; }
+  .stat .num { font-size: 1.7rem; }
+  .stat .lbl { font-size: .8rem; }
+  .card:has(> .tbl-wrap) { background: none; border: 0; padding: 0; box-shadow: none; }
+}
+
+  </style>
+</head>
+<body>
+  <div id="app"></div>
+  <noscript><p style="padding:24px;color:#e6f1ff">CyberShield needs JavaScript. Please enable it in your browser.</p></noscript>
+  <script>
+/* ================================================================
+   CyberShield – core data layer (browser-only, plain JavaScript)
+   Everything is stored in this browser's localStorage.
+   ================================================================ */
+'use strict';
+
+const $ = (s, r = document) => r.querySelector(s);
+
+/* Safe DOM builder: text is always inserted with textContent/TextNode, never innerHTML. */
+function h(tag, attrs, ...kids) {
+  const el = document.createElement(tag);
+  if (attrs) {
+    for (const [k, v] of Object.entries(attrs)) {
+      if (v == null || v === false) continue;
+      if (k === 'class') el.className = v;
+      else if (k.startsWith('on') && typeof v === 'function') el.addEventListener(k.slice(2), v);
+      else if (k === 'value' || k === 'checked' || k === 'disabled' || k === 'selected') el[k] = v;
+      else el.setAttribute(k, v === true ? '' : v);
+    }
+  }
+  for (const c of kids.flat(Infinity)) {
+    if (c == null || c === false) continue;
+    el.append(c.nodeType ? c : document.createTextNode(String(c)));
+  }
+  return el;
+}
+
+const COURSES = ['BS Information Technology', 'BS Computer Science', 'BS Information Systems', 'BS Computer Engineering', 'Other'];
+const NAME_RE = /^[A-Za-zÀ-ɏ][A-Za-zÀ-ɏ .'-]{1,59}$/;
+const EMAIL_RE = /^[^\s@]{1,64}@[^\s@]{1,190}\.[^\s@]{2,}$/;
+const SID_RE = /^[A-Za-z0-9-]{4,20}$/;
+const SLUG_RE = /^[a-z0-9-]{2,60}$/;
+
+const fmtDate = ts => (ts ? new Date(ts).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' }) : '—');
+function ago(ts) {
+  const m = Math.floor((Date.now() - ts) / 60000);
+  if (m < 1) return 'just now';
+  if (m < 60) return m + 'm ago';
+  const hr = Math.floor(m / 60);
+  if (hr < 24) return hr + 'h ago';
+  return Math.floor(hr / 24) + 'd ago';
+}
+const toHex = buf => [...new Uint8Array(buf)].map(b => b.toString(16).padStart(2, '0')).join('');
+const fromHex = hex => new Uint8Array((hex.match(/.{2}/g) || []).map(x => parseInt(x, 16)));
+function rid(n = 8) {
+  const a = new Uint8Array(n);
+  if (window.crypto && crypto.getRandomValues) crypto.getRandomValues(a);
+  else for (let i = 0; i < n; i++) a[i] = Math.floor(Math.random() * 256);
+  return toHex(a);
+}
+const pwProblem = p => {
+  if (typeof p !== 'string' || p.length < 8 || p.length > 64) return 'Password must be 8–64 characters.';
+  const miss = [];
+  if (!/[a-z]/.test(p)) miss.push('a lowercase letter');
+  if (!/[A-Z]/.test(p)) miss.push('an uppercase letter');
+  if (!/\d/.test(p)) miss.push('a number');
+  if (!/[^A-Za-z0-9]/.test(p)) miss.push('a symbol (for example ! @ # $ %)');
+  return miss.length ? 'Password is missing: ' + miss.join(', ') + '.' : null;
+};
+/* 4 bars: the last bar only fills when EVERY rule is met, so the meter never contradicts the rules */
+const pwStrength = s => {
+  const met = [s.length >= 8, /[a-z]/.test(s), /[A-Z]/.test(s), /\d/.test(s), /[^A-Za-z0-9]/.test(s)].filter(Boolean).length;
+  return met === 5 ? 4 : Math.min(met, 3);
+};
+
+/* ---------------- password hashing ---------------- */
+function cyrb53(str, seed = 0) { // fallback only (when Web Crypto is unavailable)
+  let h1 = 0xdeadbeef ^ seed, h2 = 0x41c6ce57 ^ seed;
+  for (let i = 0; i < str.length; i++) { const c = str.charCodeAt(i); h1 = Math.imul(h1 ^ c, 2654435761); h2 = Math.imul(h2 ^ c, 1597334677); }
+  h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^ Math.imul(h2 ^ (h2 >>> 13), 3266489909);
+  h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909);
+  return (4294967296 * (2097151 & h2) + (h1 >>> 0)).toString(16);
+}
+async function hashSecret(secret, saltHex) {
+  if (window.crypto && crypto.subtle) {
+    const key = await crypto.subtle.importKey('raw', new TextEncoder().encode(secret), 'PBKDF2', false, ['deriveBits']);
+    const bits = await crypto.subtle.deriveBits({ name: 'PBKDF2', salt: fromHex(saltHex), iterations: 100000, hash: 'SHA-256' }, key, 256);
+    return 'pbkdf2:' + toHex(bits);
+  }
+  let x = saltHex + secret;
+  for (let i = 0; i < 3000; i++) x = cyrb53(x, i);
+  return 'fallback:' + x;
+}
+const safeEqual = (a, b) => { if (a.length !== b.length) return false; let r = 0; for (let i = 0; i < a.length; i++) r |= a.charCodeAt(i) ^ b.charCodeAt(i); return r === 0; };
+
+/* ---------------- storage ---------------- */
+const DB_KEY = 'cybershield_db_v2';
+const SES_KEY = 'cybershield_session_v2';
+const SESSION_MS = 2 * 60 * 60 * 1000;
+let db;
+let persistent = true;
+
+function freshDb() {
+  const d = { v: 2, seq: 100, users: [], modules: [], challenges: [], results: {}, quizAttempts: [], achievements: [], userAch: [], adjustments: [], notifs: [], logs: [], labs: {}, resets: {}, locks: {}, created: Date.now() };
+  seedContent(d);
+  return d;
+}
+function loadDb() {
+  try {
+    const raw = localStorage.getItem(DB_KEY);
+    if (raw) { const d = JSON.parse(raw); if (d && d.v === 2 && Array.isArray(d.users)) return d; }
+  } catch (e) { persistent = false; }
+  return freshDb();
+}
+function saveDb() {
+  try { localStorage.setItem(DB_KEY, JSON.stringify(db)); } catch (e) { persistent = false; }
+}
+const nid = () => db.seq++;
+
+/* ---------------- session ---------------- */
+function readSession() {
+  try {
+    const s = JSON.parse(localStorage.getItem(SES_KEY));
+    if (s && s.uid && Date.now() < s.exp) return s;
+  } catch (e) { /* ignore */ }
+  return null;
+}
+function currentUser() {
+  const s = readSession();
+  if (!s) return null;
+  const u = db.users.find(x => x.id === s.uid);
+  if (!u || !u.active) { endSession(); return null; }
+  try { localStorage.setItem(SES_KEY, JSON.stringify({ uid: s.uid, sid: s.sid, exp: Date.now() + SESSION_MS })); } catch (e) { /* ignore */ }
+  return u;
+}
+function startSession(uid) { try { localStorage.setItem(SES_KEY, JSON.stringify({ uid, sid: rid(16), exp: Date.now() + SESSION_MS })); } catch (e) { persistent = false; } }
+function endSession() { try { localStorage.removeItem(SES_KEY); } catch (e) { /* ignore */ } }
+
+/* ---------------- logging / notifications ---------------- */
+function logAct(action, details = {}, uid) {
+  const s = readSession();
+  db.logs.unshift({ id: nid(), uid: uid !== undefined ? uid : (s ? s.uid : null), action, details, at: Date.now() });
+  if (db.logs.length > 1500) db.logs.length = 1500;
+}
+function notify(uid, title, body = '') {
+  db.notifs.unshift({ id: nid(), uid, title: String(title).slice(0, 120), body: String(body).slice(0, 400), read: false, at: Date.now() });
+  const mine = db.notifs.filter(n => n.uid === uid);
+  if (mine.length > 100) { const drop = new Set(mine.slice(100).map(n => n.id)); db.notifs = db.notifs.filter(n => !drop.has(n.id)); }
+}
+
+/* ---------------- scoring (points are DERIVED from result records, never stored as a number) ---------------- */
+function total(uid) {
+  let t = 0;
+  const r = db.results[uid] || {};
+  for (const k in r) t += r[k].points || 0;
+  for (const a of db.adjustments) if (a.uid === uid) t += a.points;
+  return t;
+}
+function board() {
+  return db.users.filter(u => u.role === 'student' && u.active)
+    .map(u => ({ id: u.id, name: u.name, course: u.course, points: total(u.id) }))
+    .sort((a, b) => b.points - a.points || a.id - b.id);
+}
+const rankOf = uid => { const i = board().findIndex(r => r.id === uid); return i < 0 ? null : i + 1; };
+function publishedChallenges(m) { return db.challenges.filter(c => c.moduleId === m.id && c.published).sort((a, b) => a.position - b.position || a.id - b.id); }
+function progress(uid) {
+  const out = {};
+  const res = db.results[uid] || {};
+  for (const m of db.modules) {
+    if (!m.published) continue;
+    const cs = publishedChallenges(m);
+    if (!cs.length) continue;
+    out[m.id] = { total: cs.length, done: cs.filter(c => res[c.id] && res[c.id].done).length };
+  }
+  return out;
+}
+const completedCount = uid => {
+  const res = db.results[uid] || {};
+  return db.challenges.filter(c => c.published && res[c.id] && res[c.id].done).length;
+};
+
+/* ---------------- achievements ---------------- */
+function awardAch(uid, a, byAdmin = null) {
+  if (db.userAch.some(x => x.uid === uid && x.aid === a.id)) return false;
+  db.userAch.push({ uid, aid: a.id, at: Date.now(), by: byAdmin });
+  notify(uid, `${a.icon} Achievement unlocked: ${a.name}`, a.description);
+  logAct('achievement.awarded', { achievement: a.slug, byAdmin: byAdmin !== null }, uid);
+  return true;
+}
+function evaluateAch(uid) {
+  const u = db.users.find(x => x.id === uid);
+  if (!u || u.role !== 'student') return [];
+  const have = new Set(db.userAch.filter(x => x.uid === uid).map(x => x.aid));
+  const cands = db.achievements.filter(a => a.active && !have.has(a.id));
+  if (!cands.length) return [];
+  const pts = total(uid), prog = progress(uid), done = completedCount(uid);
+  const mods = Object.values(prog);
+  const fresh = [];
+  for (const a of cands) {
+    let ok = false;
+    switch (a.criteria) {
+      case 'first_login': ok = true; break;
+      case 'module_complete': ok = !!(a.moduleId && prog[a.moduleId] && prog[a.moduleId].done >= prog[a.moduleId].total); break;
+      case 'points_at_least': ok = pts >= (a.value || 0); break;
+      case 'challenges_at_least': ok = done >= (a.value || 0); break;
+      case 'perfect_quiz': ok = db.quizAttempts.some(q => q.uid === uid && q.total > 0 && q.score === q.total && (!a.moduleId || q.moduleId === a.moduleId)); break;
+      case 'all_modules': ok = mods.length > 0 && mods.every(p => p.done >= p.total); break;
+      default: ok = false;
+    }
+    if (ok && awardAch(uid, a)) fresh.push({ name: a.name, icon: a.icon });
+  }
+  return fresh;
+}
+
+/* ---------------- grading: the ONLY place answers are judged and points are created ---------------- */
+const FACTORS = [1, 0.5, 0.25];
+const PENALISED = ['mcq', 'phish', 'cookie'];
+
+function checkAnswer(uid, c, a) {
+  const ans = c.answer || {};
+  switch (c.type) {
+    case 'mcq': {
+      const idx = Number.isInteger(a.index) ? a.index : -1;
+      return { correct: idx === ans.correct, detail: { correctIndex: ans.correct } };
+    }
+    case 'phish': {
+      const given = [...new Set((Array.isArray(a.flags) ? a.flags : []).map(String))];
+      const want = (ans.flags || []).map(String);
+      return {
+        correct: a.verdict === ans.verdict,
+        detail: { verdict: ans.verdict, found: want.filter(x => given.includes(x)), missed: want.filter(x => !given.includes(x)), wrong: given.filter(x => !want.includes(x)) }
+      };
+    }
+    case 'sqli': {
+      const inputs = cleanInputs(c, a.inputs || {});
+      const res = SqlLab.run(c.payload.template, inputs, false);
+      return { correct: SqlLab.goalReached(ans.goal, res, inputs), detail: res };
+    }
+    case 'cookie': {
+      const r = CookieGrader.check(ans, a);
+      return { correct: r.correct, detail: { fields: r.fields } };
+    }
+    case 'csrf_lab': {
+      const st = (db.labs[uid] && db.labs[uid].csrf) || CsrfLab.fresh();
+      return { correct: CsrfLab.complete(st), detail: { flags: st.flags } };
+    }
+  }
+  return { correct: false, detail: {} };
+}
+function cleanInputs(c, raw) {
+  const out = {};
+  for (const f of (c.payload && c.payload.fields) || []) out[f.name] = String((raw && raw[f.name]) ?? '').slice(0, 300);
+  return out;
+}
+function grade(uid, c, answer) {
+  db.results[uid] = db.results[uid] || {};
+  const r = db.results[uid][c.id] = db.results[uid][c.id] || { attempts: 0, wrong: 0, points: 0, done: null };
+  const chk = checkAnswer(uid, c, answer || {});
+  const already = !!r.done;
+  let earned = 0;
+  r.attempts++;
+  if (chk.correct) {
+    if (!already) {
+      const f = FACTORS[Math.min(r.wrong, FACTORS.length - 1)];
+      earned = c.points > 0 ? Math.max(1, Math.floor(c.points * f)) : 0;
+      r.points = earned;
+      r.done = Date.now();
+      logAct('challenge.completed', { challenge: c.id, points: earned }, uid);
+    }
+  } else if (!already && PENALISED.includes(c.type)) r.wrong++;
+  const fresh = evaluateAch(uid);
+  saveDb();
+  return { correct: chk.correct, earned, already, explanation: c.explanation || '', detail: chk.detail, newAch: fresh, total: total(uid) };
+}
+
+/* ---------------- authentication ---------------- */
+function pubUser(u) { return { id: u.id, name: u.name, email: u.email, sid: u.sid, course: u.course, role: u.role }; }
+
+async function createUser({ name, email, sid, course, role = 'student', password, sample = false }) {
+  const salt = rid(16);
+  const u = {
+    id: nid(), name, email, sid: sid || '', course: course || '', role, active: true, salt,
+    hash: sample ? 'x' : await hashSecret(password, salt), created: Date.now(), lastLogin: null, sample: !!sample
+  };
+  db.users.push(u);
+  return u;
+}
+function validateProfile(d, { needSid = true, ignoreId = null } = {}) {
+  const name = String(d.name || '').trim().replace(/\s+/g, ' ');
+  const email = String(d.email || '').trim().toLowerCase();
+  const sid = String(d.sid || '').trim();
+  if (!NAME_RE.test(name)) return { error: "Enter a valid name (letters, spaces, . ' - only)." };
+  if (!EMAIL_RE.test(email) || email.length > 254) return { error: 'Enter a valid email address.' };
+  if (needSid && !SID_RE.test(sid)) return { error: 'Student ID must be 4–20 letters, numbers or dashes.' };
+  if (!needSid && sid && !SID_RE.test(sid)) return { error: 'Student ID must be 4–20 letters, numbers or dashes.' };
+  if (d.course && !COURSES.includes(d.course)) return { error: 'Choose a course from the list.' };
+  if (db.users.some(u => u.id !== ignoreId && u.email === email)) return { error: 'That email is already registered.' };
+  if (sid && db.users.some(u => u.id !== ignoreId && u.sid.toLowerCase() === sid.toLowerCase())) return { error: 'That student ID is already registered.' };
+  return { name, email, sid, course: d.course || '' };
+}
+const hasAdmin = () => db.users.some(u => u.role === 'admin' && u.active);
+
+const Auth = {
+  async setupAdmin(f) {
+    if (hasAdmin()) return { ok: false, error: 'An administrator already exists.' };
+    const v = validateProfile({ ...f, course: 'Other' }, { needSid: false });
+    if (v.error) return { ok: false, error: v.error };
+    const pe = pwProblem(f.password);
+    if (pe) return { ok: false, error: pe };
+    if (f.password !== f.confirm) return { ok: false, error: 'Passwords do not match.' };
+    const u = await createUser({ ...v, sid: v.sid || 'ADMIN-001', role: 'admin', password: f.password });
+    u.lastLogin = Date.now();
+    logAct('admin.first_admin_created', {}, u.id);
+    startSession(u.id);
+    saveDb();
+    return { ok: true };
+  },
+  async register(f) {
+    const v = validateProfile(f);
+    if (v.error) return { ok: false, error: v.error };
+    if (!v.course) return { ok: false, error: 'Choose a course from the list.' };
+    const pe = pwProblem(f.password);
+    if (pe) return { ok: false, error: pe };
+    if (f.password !== f.confirm) return { ok: false, error: 'Passwords do not match.' };
+    const u = await createUser({ ...v, role: 'student', password: f.password }); // role is always 'student' here
+    u.lastLogin = Date.now();
+    logAct('auth.register', {}, u.id);
+    startSession(u.id);
+    evaluateAch(u.id);
+    saveDb();
+    return { ok: true };
+  },
+  async login(email, password) {
+    email = String(email || '').trim().toLowerCase();
+    password = String(password || '');
+    const L = db.locks[email];
+    if (L && L.until > Date.now()) return { ok: false, error: `Too many attempts. Try again in ${Math.ceil((L.until - Date.now()) / 1000)}s.` };
+    const u = db.users.find(x => x.email === email);
+    let good = false;
+    if (u) good = safeEqual(await hashSecret(password, u.salt), u.hash);
+    else await hashSecret(password, rid(16)); // similar timing for unknown emails
+    if (!good) {
+      const expired = L && L.until > 0 && L.until <= Date.now();
+      const n = ((L && !expired ? L.n : 0) || 0) + 1;
+      db.locks[email] = n >= 5 ? { n: 0, until: Date.now() + 60000 } : { n, until: 0 };
+      logAct('auth.login_failed', { email }, u ? u.id : null);
+      saveDb();
+      return { ok: false, error: 'Invalid email or password.' };
+    }
+    if (!u.active) { logAct('auth.login_blocked', { email }, u.id); saveDb(); return { ok: false, error: 'Your account has been disabled. Please contact your instructor.' }; }
+    delete db.locks[email];
+    u.lastLogin = Date.now();
+    logAct('auth.login', {}, u.id);
+    startSession(u.id);
+    evaluateAch(u.id);
+    saveDb();
+    return { ok: true };
+  },
+  logout() { const s = readSession(); if (s) { logAct('auth.logout', {}, s.uid); saveDb(); } endSession(); },
+  async resetWithCode(email, code, newPw, confirm) {
+    email = String(email || '').trim().toLowerCase();
+    const generic = { ok: false, error: 'Invalid email or reset code (codes expire after 30 minutes).' };
+    const r = db.resets[email];
+    const pe = pwProblem(newPw);
+    if (pe) return { ok: false, error: pe };
+    if (newPw !== confirm) return { ok: false, error: 'Passwords do not match.' };
+    if (!r || r.exp < Date.now() || r.tries >= 5) { delete db.resets[email]; saveDb(); return generic; }
+    const u = db.users.find(x => x.email === email);
+    if (!u) return generic;
+    const ok = safeEqual(await hashSecret(String(code || '').trim().toUpperCase(), r.salt), r.hash);
+    if (!ok) { r.tries++; saveDb(); return generic; }
+    u.salt = rid(16);
+    u.hash = await hashSecret(newPw, u.salt);
+    delete db.resets[email];
+    delete db.locks[email];
+    logAct('auth.password_reset_done', {}, u.id);
+    notify(u.id, 'Password changed', 'Your password was reset with an instructor-issued code.');
+    saveDb();
+    return { ok: true };
+  }
+};
+
+/* ---------------- account actions for the signed-in user ---------------- */
+const Me = {
+  updateProfile(u, name, course) {
+    name = String(name || '').trim().replace(/\s+/g, ' ');
+    if (!NAME_RE.test(name)) return { ok: false, error: "Enter a valid name (letters, spaces, . ' - only)." };
+    if (u.role === 'student' && !COURSES.includes(course)) return { ok: false, error: 'Choose a course from the list.' };
+    u.name = name;
+    if (u.role === 'student') u.course = course;
+    logAct('profile.updated', {}, u.id);
+    saveDb();
+    return { ok: true };
+  },
+  async changePassword(u, current, next, confirm) {
+    if (!safeEqual(await hashSecret(String(current || ''), u.salt), u.hash)) return { ok: false, error: 'Current password is incorrect.' };
+    const pe = pwProblem(next);
+    if (pe) return { ok: false, error: pe };
+    if (next !== confirm) return { ok: false, error: 'Passwords do not match.' };
+    if (next === current) return { ok: false, error: 'New password must be different.' };
+    u.salt = rid(16);
+    u.hash = await hashSecret(next, u.salt);
+    logAct('auth.password_changed', {}, u.id);
+    saveDb();
+    return { ok: true };
+  }
+};
+
+/* ================================================================
+   Lab engines – everything here is a SAFE SIMULATION.
+   No real database, bank or website is ever contacted.
+   ================================================================ */
+
+/* ---------- SQL injection simulator: a tiny in-memory SELECT interpreter ---------- */
+const SqlLab = (() => {
+  const ADMIN_PW = 'Tr0ub4dor&3';
+  const USERS = [
+    { id: 1, username: 'admin', password: ADMIN_PW, role: 'admin' },
+    { id: 2, username: 'alice', password: 'wonderland42', role: 'student' },
+    { id: 3, username: 'bob', password: 'builder99', role: 'student' }
+  ];
+  const PRODUCTS = [
+    { id: 1, name: 'Notebook', price: 45, category: 'school', is_hidden: 0 },
+    { id: 2, name: 'Pen Set', price: 20, category: 'school', is_hidden: 0 },
+    { id: 3, name: 'Hoodie', price: 650, category: 'apparel', is_hidden: 0 },
+    { id: 4, name: 'Cap', price: 250, category: 'apparel', is_hidden: 0 },
+    { id: 5, name: 'STAFF-ONLY 90% discount code', price: 0, category: 'internal', is_hidden: 1 }
+  ];
+  const KEYWORDS = ['SELECT', 'FROM', 'WHERE', 'AND', 'OR', 'NOT', 'LIMIT'];
+  class SqlErr extends Error {}
+  const isNum = v => typeof v === 'number' || (typeof v === 'string' && v.trim() !== '' && !isNaN(Number(v)));
+
+  function build(tpl, inputs) { return tpl.replace(/\{(\w+)\}/g, (m, k) => String(inputs[k] ?? '')); }
+
+  function tokenize(s) {
+    const out = [];
+    let i = 0;
+    const n = s.length;
+    while (i < n) {
+      const c = s[i];
+      if (/\s/.test(c)) { i++; continue; }
+      if (c === '-' && s[i + 1] === '-') break;
+      if (c === '#') break;
+      if (c === '/' && s[i + 1] === '*') {
+        const end = s.indexOf('*/', i + 2);
+        if (end < 0) throw new SqlErr("You have an error in your SQL syntax; unterminated comment near '/*'");
+        i = end + 2;
+        continue;
+      }
+      if (c === "'" || c === '"') {
+        const q = c;
+        i++;
+        let buf = '', closed = false;
+        while (i < n) {
+          const ch = s[i];
+          if (ch === '\\' && i + 1 < n) { buf += s[i + 1]; i += 2; continue; }
+          if (ch === q) {
+            if (s[i + 1] === q) { buf += q; i += 2; continue; }
+            closed = true; i++; break;
+          }
+          buf += ch; i++;
+        }
+        if (!closed) throw new SqlErr("You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '" + buf.slice(0, 20) + "' at line 1 (unterminated string)");
+        out.push({ t: 'str', v: buf });
+        continue;
+      }
+      if (/[0-9]/.test(c)) {
+        let j = i;
+        while (j < n && /[0-9.]/.test(s[j])) j++;
+        out.push({ t: 'num', v: s.slice(i, j) });
+        i = j;
+        continue;
+      }
+      if (/[A-Za-z_]/.test(c)) {
+        let j = i;
+        while (j < n && /[A-Za-z0-9_]/.test(s[j])) j++;
+        const word = s.slice(i, j), up = word.toUpperCase();
+        out.push(KEYWORDS.includes(up) ? { t: 'kw', v: up } : { t: 'id', v: word });
+        i = j;
+        continue;
+      }
+      const two = s.slice(i, i + 2);
+      if (['!=', '<>', '<=', '>='].includes(two)) { out.push({ t: 'sym', v: two }); i += 2; continue; }
+      if ('(),*;=<>?'.includes(c)) { out.push({ t: c === '?' ? 'ph' : 'sym', v: c }); i++; continue; }
+      throw new SqlErr("You have an error in your SQL syntax; unexpected character '" + c + "'");
+    }
+    return out;
+  }
+
+  function execute(sql, bindings) {
+    const tk = tokenize(sql);
+    let pos = 0, bi = 0, cols = [];
+    const peek = () => tk[pos] || null;
+    const next = () => tk[pos++] || null;
+    const synErr = t => { throw new SqlErr('You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near ' + (t ? "'" + t.v + "'" : 'end of input')); };
+    const acceptSym = v => { const t = peek(); if (t && t.t === 'sym' && t.v === v) { pos++; return true; } return false; };
+    const acceptKw = v => { const t = peek(); if (t && t.t === 'kw' && t.v === v) { pos++; return true; } return false; };
+    const expectKw = v => { if (!acceptKw(v)) synErr(peek()); };
+
+    function operand() {
+      const t = next();
+      if (!t) synErr(null);
+      if (t.t === 'str') { const v = t.v; return () => v; }
+      if (t.t === 'num') { const v = Number(t.v); return () => v; }
+      if (t.t === 'ph') { const v = bindings[bi++] ?? ''; return () => v; }
+      if (t.t === 'id') {
+        const col = t.v.toLowerCase();
+        if (!cols.includes(col)) throw new SqlErr("Unknown column '" + t.v + "' in 'where clause'");
+        return row => row[col];
+      }
+      return synErr(t);
+    }
+    function cmp(a, op, b) {
+      let c;
+      if (isNum(a) && isNum(b)) c = Number(a) - Number(b);
+      else { const x = String(a).toLowerCase(), y = String(b).toLowerCase(); c = x < y ? -1 : x > y ? 1 : 0; }
+      switch (op) {
+        case '=': return c === 0;
+        case '!=': case '<>': return c !== 0;
+        case '<': return c < 0;
+        case '>': return c > 0;
+        case '<=': return c <= 0;
+        case '>=': return c >= 0;
+      }
+      return false;
+    }
+    function primary() {
+      if (acceptSym('(')) { const inner = orExpr(); if (!acceptSym(')')) synErr(peek()); return inner; }
+      const left = operand();
+      const t = peek();
+      if (t && t.t === 'sym' && ['=', '!=', '<>', '<', '>', '<=', '>='].includes(t.v)) {
+        pos++;
+        const right = operand();
+        return row => cmp(left(row), t.v, right(row));
+      }
+      return row => Number(left(row)) !== 0;
+    }
+    function notExpr() { if (acceptKw('NOT')) { const f = notExpr(); return row => !f(row); } return primary(); }
+    function andExpr() { const p = [notExpr()]; while (acceptKw('AND')) p.push(notExpr()); return row => p.every(f => f(row)); }
+    function orExpr() { const p = [andExpr()]; while (acceptKw('OR')) p.push(andExpr()); return row => p.some(f => f(row)); }
+
+    expectKw('SELECT');
+    let selected = [];
+    if (acceptSym('*')) selected = ['*'];
+    else {
+      do { const t = next(); if (!t || t.t !== 'id') synErr(t); selected.push(t.v); } while (acceptSym(','));
+    }
+    expectKw('FROM');
+    const tt = next();
+    if (!tt || tt.t !== 'id') synErr(tt);
+    const table = tt.v.toLowerCase();
+    const tables = { users: USERS, products: PRODUCTS };
+    if (!tables[table]) throw new SqlErr("Table 'lab." + table + "' doesn't exist");
+    cols = Object.keys(tables[table][0]);
+    for (const c of selected) if (c !== '*' && !cols.includes(c.toLowerCase())) throw new SqlErr("Unknown column '" + c + "' in 'field list'");
+
+    let filter = () => true;
+    if (acceptKw('WHERE')) filter = orExpr();
+    let limit = null;
+    if (acceptKw('LIMIT')) { const t = next(); if (!t || t.t !== 'num') synErr(t); limit = parseInt(t.v, 10); }
+    if (acceptSym(';') && peek()) throw new SqlErr('Multiple statements are not allowed (stacked queries are disabled in this lab).');
+    if (peek()) synErr(peek());
+
+    let matched = tables[table].filter(r => filter(r));
+    if (limit !== null) matched = matched.slice(0, limit);
+    const rows = matched.map(r => {
+      if (selected[0] === '*') return { ...r };
+      const o = {};
+      for (const c of selected) o[c.toLowerCase()] = r[c.toLowerCase()];
+      return o;
+    });
+    return { matched, rows };
+  }
+
+  function run(tpl, inputs, secure) {
+    const bindings = [];
+    let query;
+    if (secure) { // prepared statement: values never become part of the SQL text
+      query = tpl.replace(/'\{(\w+)\}'|\{(\w+)\}/g, (m, a, b) => { bindings.push(String(inputs[a || b] ?? '')); return '?'; });
+    } else query = build(tpl, inputs);
+    try {
+      const r = execute(query, bindings);
+      return { query, error: null, rows: r.rows, matched: r.matched, secure: !!secure };
+    } catch (e) {
+      if (e instanceof SqlErr) return { query, error: e.message, rows: [], matched: [], secure: !!secure };
+      throw e;
+    }
+  }
+
+  function goalReached(goal, res, inputs) {
+    if (res.error || res.secure) return false;
+    const pw = String(inputs.password ?? '');
+    return res.matched.some(r => {
+      if (goal === 'login_admin') return r.role === 'admin' && pw !== ADMIN_PW;
+      if (goal === 'login_admin_blank_password') return r.role === 'admin' && pw.trim() === '';
+      if (goal === 'reveal_hidden') return Number(r.is_hidden) === 1;
+      return false;
+    });
+  }
+  return { run, goalReached, ADMIN_PW };
+})();
+
+/* ---------- CSRF lab: fake bank, fake money, state stored per student ---------- */
+const CsrfLab = {
+  fresh() { return { balance: 1000, attacker: 0, mode: 'vulnerable', token: null, flags: { attack: false, defense: false, legit: false }, log: [] }; },
+  _log(s, who, text, ok) { s.log.unshift({ who, text, ok }); s.log = s.log.slice(0, 12); },
+  setMode(s, mode) {
+    s.mode = mode === 'secure' ? 'secure' : 'vulnerable';
+    s.token = s.mode === 'secure' ? rid(16) : null;
+    this._log(s, 'system', 'Bank switched to ' + s.mode.toUpperCase() + ' mode.', true);
+    return s;
+  },
+  transfer(s, amount, token) {
+    if (!Number.isInteger(amount) || amount < 1 || amount > s.balance) {
+      this._log(s, 'you', `Transfer of ${amount} refused: invalid amount or insufficient funds.`, false);
+      return { ok: false, status: 422, message: 'Invalid amount or insufficient funds.' };
+    }
+    if (s.mode === 'secure' && !(typeof s.token === 'string' && typeof token === 'string' && token !== '' && safeEqual(s.token, token))) {
+      this._log(s, 'you', 'Transfer rejected: missing or invalid CSRF token.', false);
+      return { ok: false, status: 403, message: 'Rejected (403): missing or invalid CSRF token.' };
+    }
+    s.balance -= amount;
+    if (s.mode === 'secure') s.flags.legit = true;
+    this._log(s, 'you', `Transfer of ${amount} to Campus Bookstore accepted.`, true);
+    return { ok: true, status: 200, message: `Accepted (200): ${amount} sent to Campus Bookstore.` };
+  },
+  forge(s, amount) {
+    amount = Math.max(1, Math.min(Number(amount) || 1, 500));
+    if (s.mode === 'secure') {
+      s.flags.defense = true;
+      this._log(s, 'evil.example', `Forged transfer of ${amount} BLOCKED: no valid CSRF token.`, false);
+      return { ok: false, status: 403, message: 'Blocked (403): the forged request carried the session cookie but no valid CSRF token.' };
+    }
+    const moved = Math.min(amount, s.balance);
+    if (moved < 1) return { ok: false, status: 422, message: 'Nothing left to steal. Press "Reset balances".' };
+    s.balance -= moved;
+    s.attacker += moved;
+    s.flags.attack = true;
+    this._log(s, 'evil.example', `Forged transfer of ${moved} to attacker ACCEPTED (no token was checked).`, true);
+    return { ok: true, status: 200, message: `Accepted (200): the bank trusted the cookie and moved ${moved} to the attacker.` };
+  },
+  complete: s => !!(s.flags.attack && s.flags.defense && s.flags.legit)
+};
+
+/* ---------- Cookie scenario grader ---------- */
+const CookieGrader = {
+  SAMESITE: ['Strict', 'Lax', 'None', ''],
+  LIFETIME: ['session', 'short', 'long'],
+  normalize(a) {
+    const ss = String(a.samesite ?? ''), lt = String(a.lifetime ?? 'session');
+    return { httponly: a.httponly === true || a.httponly === 'true', secure: a.secure === true || a.secure === 'true', samesite: this.SAMESITE.includes(ss) ? ss : '', lifetime: this.LIFETIME.includes(lt) ? lt : 'session' };
+  },
+  check(rules, answer) {
+    const a = this.normalize(answer);
+    const fields = {};
+    let ok = true;
+    for (const k of Object.keys(rules)) {
+      const allowed = rules[k];
+      const good = Array.isArray(allowed) ? allowed.includes(a[k]) : a[k] === allowed;
+      fields[k] = good;
+      ok = ok && good;
+    }
+    return { correct: ok, fields };
+  }
+};
+
+/* ---------- validation of admin-authored challenges ---------- */
+const ChallengeSchema = {
+  TYPES: ['mcq', 'phish', 'sqli', 'cookie', 'csrf_lab'],
+  GOALS: ['login_admin', 'login_admin_blank_password', 'reveal_hidden'],
+  validate(type, payload, answer) {
+    const e = [];
+    payload = payload && typeof payload === 'object' ? payload : {};
+    answer = answer && typeof answer === 'object' ? answer : {};
+    switch (type) {
+      case 'mcq': {
+        const o = payload.options;
+        if (!Array.isArray(o) || o.length < 2 || o.length > 6) { e.push('Provide 2 to 6 answer options.'); break; }
+        if (o.some(x => typeof x !== 'string' || !x.trim() || x.length > 200)) e.push('Each option must be 1–200 characters.');
+        if (!Number.isInteger(answer.correct) || answer.correct < 0 || answer.correct >= o.length) e.push('The correct option number is out of range.');
+        break;
+      }
+      case 'phish':
+        if (!['email', 'sms', 'link'].includes(payload.kind)) e.push('payload.kind must be "email", "sms" or "link".');
+        if (payload.kind === 'link' ? typeof payload.url !== 'string' : !(Array.isArray(payload.body) || typeof payload.body === 'string')) e.push('payload needs "url" (link) or "body" (email/sms).');
+        if (!['phishing', 'legit'].includes(answer.verdict)) e.push('answer.verdict must be "phishing" or "legit".');
+        if (answer.flags !== undefined && !Array.isArray(answer.flags)) e.push('answer.flags must be a list.');
+        break;
+      case 'sqli': {
+        const t = payload.template, f = payload.fields;
+        if (typeof t !== 'string' || !Array.isArray(f) || f.length < 1 || f.length > 4) { e.push('payload needs "template" and 1–4 "fields".'); break; }
+        if (f.some(x => !x || !/^\w{1,30}$/.test(x.name || '') || !t.includes('{' + x.name + '}'))) e.push('Every field name must appear in the template as {name}.');
+        if (!this.GOALS.includes(answer.goal)) e.push('answer.goal must be one of: ' + this.GOALS.join(', ') + '.');
+        break;
+      }
+      case 'cookie':
+        if (typeof payload.scenario !== 'string' || !payload.scenario.trim()) e.push('payload.scenario text is required.');
+        for (const k of ['httponly', 'secure']) if (typeof answer[k] !== 'boolean') e.push('answer.' + k + ' must be true or false.');
+        for (const [k, allowed] of [['samesite', CookieGrader.SAMESITE], ['lifetime', CookieGrader.LIFETIME]]) {
+          const v = answer[k];
+          if (!Array.isArray(v) || !v.length || v.some(x => !allowed.includes(x))) e.push('answer.' + k + ' must be a non-empty list of: ' + allowed.map(x => x === '' ? '""' : x).join(', ') + '.');
+        }
+        break;
+      case 'csrf_lab': break;
+      default: e.push('Unknown challenge type.');
+    }
+    return e;
+  }
+};
+
+/* ================================================================
+   Seed content – created once when the database is first made.
+   Admins can edit/add/delete all of it from the Admin → Content screen.
+   Lesson markup: "# Heading", "- list item", ``` for code blocks, blank line = new paragraph.
+   ================================================================ */
+
+const FLAG_LABELS = {
+  sender: 'Suspicious sender / look-alike domain',
+  urgency: 'Urgency or threats',
+  link: 'Suspicious link destination',
+  credentials: 'Asks for password / OTP / card details',
+  attachment: 'Unexpected attachment',
+  grammar: 'Odd wording or formatting',
+  too_good: 'Too good to be true',
+  greeting: 'Generic greeting'
+};
+
+function seedContent(d) {
+  const id = () => d.seq++;
+  const mod = (slug, title, icon, summary, type, position, lesson) => {
+    const m = { id: id(), slug, title, icon, summary, lesson, type, position, published: true };
+    d.modules.push(m);
+    return m;
+  };
+  let pos = 0;
+  const ch = (m, type, title, prompt, payload, answer, explanation, points) => {
+    d.challenges.push({ id: id(), moduleId: m.id, type, title, prompt, payload, answer, explanation, points, position: pos++, published: true });
+  };
+  const mcq = (m, title, options, correct, explanation, points = 10) => ch(m, 'mcq', title, '', { options }, { correct }, explanation, points);
+
+  /* ---------------- Phishing ---------------- */
+  const phish = mod('phishing', 'Phishing Simulator', '🎣', 'Judge emails, texts and links: legitimate or suspicious?', 'lab', 1,
+`# What is phishing?
+Phishing is a trick where an attacker pretends to be someone you trust (a bank, your school, a friend) to make you click a bad link, open a malicious file or hand over a password or one-time code.
+
+# Common red flags
+- The sender address does not match the real organisation (look closely: paypa1 vs paypal, extra words, odd domains).
+- Urgency or threats: "act now", "account will be closed in 24 hours".
+- A link whose real destination differs from the text. Hover (or long-press) to see the true address.
+- Requests for passwords, OTP codes, card numbers or "verification".
+- Unexpected attachments, especially .zip, .exe or macro-enabled documents.
+- Too good to be true: prizes, scholarships you never applied for.
+- Generic greetings such as "Dear customer".
+
+# Reading a link
+The real website is the part right before the first single slash, read from the right. In https://uniportal.edu.verify-login.example/login the real site is verify-login.example, NOT uniportal.edu.
+
+# What to do
+- Do not click. Open the official site by typing the address yourself or using your saved bookmark.
+- Never share OTP codes. Real organisations never ask for them.
+- Report it to your IT office and delete the message.
+
+# How scoring works
+Pick the verdict (and optionally tick the red flags you spot). First-try correct answers earn full points; repeated wrong guesses earn fewer.`);
+  pos = 0;
+  ch(phish, 'phish', 'Account locked notice', 'Is this email legitimate or phishing?',
+    { kind: 'email', from: 'PayFast Security <security@payfast-support.example>', to: 'you@student.edu', subject: 'URGENT: Your PayFast account will be closed in 24 hours!',
+      body: ['Dear customer,', 'We detected unusual activity. Your account will be PERMANENTLY CLOSED within 24 hours unless you verify your identity now.', 'Click the button below and enter your password and OTP to keep your account active.'],
+      links: [{ text: 'Verify my account now', url: 'https://payfast-secure-login.example/verify?id=88213' }] },
+    { verdict: 'phishing', flags: ['sender', 'urgency', 'link', 'credentials', 'greeting'] },
+    'Classic phishing: a look-alike sender domain, a 24-hour threat, a generic greeting, and a link that goes to a different site asking for your password and OTP. Real services never ask for your OTP.', 15);
+  ch(phish, 'phish', 'Enrollment schedule', 'Is this email legitimate or phishing?',
+    { kind: 'email', from: 'Office of the Registrar <registrar@uniportal.edu>', to: 'you@student.edu', subject: 'Your enrollment schedule for next term is now available',
+      body: ['Hello Maria,', 'The enrollment schedule for the coming term has been posted. Please review your assigned date and time on the student portal.', 'You do not need to reply to this message. If you have questions, visit the Registrar\'s window during office hours.'],
+      links: [{ text: 'uniportal.edu/enrollment', url: 'https://www.uniportal.edu/enrollment' }] },
+    { verdict: 'legit', flags: [] },
+    'This one is legitimate: the sender domain matches the school, it addresses you by name, the link goes to the same real domain, and it never asks for a password or code.', 15);
+  ch(phish, 'phish', 'Locked wallet text', 'Is this text message legitimate or phishing?',
+    { kind: 'sms', from: '+63 917 555 0142', body: ['PayFast: Your wallet is LOCKED due to suspicious login. Verify within 2 hrs to avoid permanent suspension:', 'bit.ly/pf-unlock-9x2'], links: [{ text: 'bit.ly/pf-unlock-9x2', url: 'http://bit.ly/pf-unlock-9x2 (redirects to an unknown site)' }] },
+    { verdict: 'phishing', flags: ['urgency', 'link', 'sender'] },
+    'Real companies do not send account-unlock links from random mobile numbers. The 2-hour deadline and a shortened link that hides the destination are strong signs of smishing (SMS phishing).', 15);
+  ch(phish, 'phish', 'Student portal address', 'Look at this address. Is it the real student portal (https://www.uniportal.edu) or a fake?',
+    { kind: 'link', url: 'https://uniportal.edu.verify-login.example/login' },
+    { verdict: 'phishing', flags: ['link'] },
+    'Read the domain from the right: the real site is verify-login.example. The text "uniportal.edu" is only a subdomain the attacker chose to fool you.', 15);
+  ch(phish, 'phish', 'Encyclopedia link', 'Is this link safe to open for a research assignment?',
+    { kind: 'link', url: 'https://en.wikipedia.org/wiki/Phishing' },
+    { verdict: 'legit', flags: [] },
+    'The domain wikipedia.org is exactly what it claims to be and the connection uses HTTPS. A link being long or having a path is not suspicious by itself.', 10);
+  ch(phish, 'phish', 'Scholarship winner', 'Is this email legitimate or phishing?',
+    { kind: 'email', from: 'Scholarship Committee <grants@global-edu-awards.example>', to: 'you@student.edu', subject: 'CONGRATULATIONS!!! You won a ₱50,000 scholarship',
+      body: ['Dear Student,', 'You have been SELECTED for a ₱50,000 scholarship (no application needed!!). To claim your prize, download and open the attached form and send us your ID, home address and bank details.'],
+      attachment: 'Scholarship_Form.zip (4.2 MB)', links: [] },
+    { verdict: 'phishing', flags: ['too_good', 'attachment', 'credentials', 'grammar', 'greeting'] },
+    'You cannot win a scholarship you never applied for. The zip attachment may contain malware, and asking for ID and bank details is identity-theft bait.', 15);
+  ch(phish, 'phish', 'New sign-in alert', 'Is this email legitimate or phishing? (Hint: check where the link really goes.)',
+    { kind: 'email', from: 'UniPortal Accounts <no-reply@accounts.uniportal.edu>', to: 'you@student.edu', subject: 'New sign-in to your UniPortal account',
+      body: ['Hi Maria,', 'We noticed a new sign-in to your account from a Windows device on Tuesday at 9:14 AM.', 'If this was you, no action is needed. If not, review your recent activity in your account settings.'],
+      links: [{ text: 'Review recent activity', url: 'https://accounts.uniportal.edu/security/activity' }] },
+    { verdict: 'legit', flags: [] },
+    'Legitimate: the sender and the link share the real school domain, there is no pressure, and it asks for no credentials. Even so, the safe habit is to open your account by typing the address yourself.', 15);
+  ch(phish, 'phish', 'Bank OTP text', 'Is this text message legitimate or phishing?',
+    { kind: 'sms', from: 'CampusBank', body: ['Your CampusBank OTP is 482913. It expires in 5 minutes. NEVER share this code with anyone, including bank staff. Not you? Call the hotline on the back of your card.'], links: [] },
+    { verdict: 'legit', flags: [] },
+    'Legitimate: it simply delivers a code you requested, warns you not to share it, has no link and tells you to use the number printed on your card. It becomes dangerous only if someone ELSE asks you to read it out.', 10);
+
+  /* ---------------- CSRF ---------------- */
+  const csrf = mod('csrf', 'CSRF Security Lab', '🔁', 'Forge a request, then stop it with CSRF tokens.', 'lab', 2,
+`# What is CSRF?
+Cross-Site Request Forgery tricks your browser into sending a request to a site where you are already logged in. The attacker never sees your password. They just lure you to a page that makes your browser do the work.
+
+# Why it works
+Browsers automatically attach your cookies (including your login session) to every request to a site, even when the request was started by a different website. If the server only checks the cookie, it cannot tell your real click from a forged one.
+
+# The attack, step by step
+- 1. You log in to your bank. The browser stores the session cookie.
+- 2. In another tab you open evil.example, which contains a hidden form that posts to the bank.
+- 3. The form submits itself. Your browser adds your session cookie.
+- 4. The bank sees a valid session and moves the money.
+
+# The defences
+- CSRF token: a secret, unpredictable value placed in each form and checked by the server. A forged request cannot know it.
+- SameSite cookies (Lax or Strict) so cookies are not sent on most cross-site requests.
+- Check the Origin / Referer headers of state-changing requests.
+- Never change data with GET requests. Use POST/PUT/DELETE.
+- Ask for the password again before very sensitive actions.
+
+# Secure request handling (pseudo-code)
+\`\`\`
+on page load:   token = random(); session.csrf = token; put token in the form
+on POST:        if request.token != session.csrf  ->  reject with 403
+                else process the request
+\`\`\`
+
+# Your lab mission
+1. Keep the bank in VULNERABLE mode and run the attack from the evil page.
+2. Switch the bank to SECURE mode and run the same attack: it must be blocked.
+3. Send your own legitimate transfer in secure mode (the form includes the token).
+All three steps unlock the points. Everything is fake: no real bank or website is involved.`);
+  pos = 0;
+  ch(csrf, 'csrf_lab', 'Lab: forge a transfer, then block it', 'Complete all three steps in the lab below, then claim your points.', {}, {},
+    'You saw that a cookie alone proves nothing about who started a request, and that a secret per-form token lets the server reject forged ones.', 60);
+  mcq(csrf, 'What does a CSRF token protect against?', ['Stolen passwords on a weak database', 'Forged requests sent from another website using your session', 'Slow network connections', 'Malware inside email attachments'], 1,
+    'The token is a secret the attacker\'s page cannot read, so a forged cross-site request arrives without it and is rejected.');
+  mcq(csrf, 'Which request should never change data (e.g. transfer money)?', ['POST', 'PUT', 'GET', 'DELETE'], 2,
+    'GET requests can be triggered by simple links and images, so state changes must use POST/PUT/DELETE together with CSRF protection.');
+  mcq(csrf, 'Which cookie attribute helps stop browsers from sending your session cookie on most cross-site requests?', ['HttpOnly', 'SameSite', 'Path', 'Domain'], 1,
+    'SameSite=Lax or Strict limits when cookies are attached to cross-site requests. It is a strong extra layer, used together with tokens.');
+
+  /* ---------------- SQL injection ---------------- */
+  const sqli = mod('sqli', 'SQL Injection Lab', '💉', 'Break a vulnerable query in a safe sandbox, then fix it.', 'lab', 3,
+`# What is SQL injection?
+It happens when an application builds a database query by gluing user input into the SQL text. The input can then change the meaning of the query, for example turning a password check into something that is always true.
+
+# The vulnerable pattern
+\`\`\`
+query = "SELECT * FROM users WHERE username = '" + username + "' AND password = '" + password + "'"
+\`\`\`
+If the password is  ' OR '1'='1  the query becomes ... AND password = '' OR '1'='1' and every row matches.
+
+# Useful ideas to try in the lab
+- Quotes close a string early, so you can add your own conditions.
+- OR 1=1 style conditions are always true.
+- -- starts a comment, which cuts off the rest of the query.
+- Errors teach you about the query structure, which is why real sites must never show database errors to users.
+
+# How to prevent it
+- Use parameterised queries (prepared statements). The query text and the values are sent separately, so input is only ever data.
+- Validate input (type, length, allowed characters) as an extra layer.
+- Give the database account the least privilege it needs.
+- Hide detailed errors from users and log them privately.
+- Hash passwords. Never store or compare plain text.
+
+# Secure code (Node.js style)
+\`\`\`
+const rows = db.query("SELECT * FROM users WHERE username = ? AND password_hash = ?", [username, hash]);
+\`\`\`
+
+# Safety
+This lab uses a built-in simulator with fake tables. It cannot touch any real database or website. Never test injection against systems you do not own or have written permission to test.`);
+  pos = 0;
+  ch(sqli, 'sqli', 'Log in as admin without the password', 'The login form pastes your input into the query. Log in as the user "admin" WITHOUT knowing the real password.',
+    { template: "SELECT * FROM users WHERE username = '{username}' AND password = '{password}'", fields: [{ name: 'username', label: 'Username' }, { name: 'password', label: 'Password' }], hint: 'Make the password condition always true. Try closing the quote, then add OR with a statement that is always true.' },
+    { goal: 'login_admin' },
+    'Because the password text became part of the SQL, the condition OR \'1\'=\'1\' made the WHERE clause true for every row. A prepared statement would have treated the whole input as a plain password.', 40);
+  ch(sqli, 'sqli', 'Skip the password check with a comment', 'Log in as "admin" with the password field left EMPTY. Use only the username box.',
+    { template: "SELECT * FROM users WHERE username = '{username}' AND password = '{password}'", fields: [{ name: 'username', label: 'Username' }, { name: 'password', label: 'Password' }], hint: 'Close the username quote, then use a comment marker (--) to cut off the password part of the query.' },
+    { goal: 'login_admin_blank_password' },
+    'The comment marker made the database ignore everything after it, including the password check. User input must never be able to change the structure of a query.', 40);
+  ch(sqli, 'sqli', 'Reveal the hidden product', 'The shop only shows products with is_hidden = 0. Make the search return the hidden STAFF-ONLY item.',
+    { template: "SELECT name, price, is_hidden FROM products WHERE category = '{category}' AND is_hidden = 0", fields: [{ name: 'category', label: 'Category (try: school)' }], hint: 'Close the category quote, add an OR condition for hidden items, and comment out the rest.' },
+    { goal: 'reveal_hidden' },
+    'Injected conditions rewrote the filter, so data that should stay private became visible. This is how attackers read other users\' data through search boxes.', 40);
+  mcq(sqli, 'Which code is the secure way to run this query?', ['"SELECT * FROM users WHERE name = \'" + name + "\'"', 'query("SELECT * FROM users WHERE name = ?", [name])', '"SELECT * FROM users WHERE name = \'" + name.toUpperCase() + "\'"', 'Escape only the double-quote character in name'], 1,
+    'Parameterised queries send the SQL text and the values separately, so the value can never become SQL.');
+  mcq(sqli, 'Why should a website NOT show raw database errors to visitors?', ['They make pages load slowly', 'They reveal table and query details that help attackers', 'They are always wrong', 'Browsers cannot display them'], 1,
+    'Detailed errors leak structure (table names, query shape). Show a generic message to users and log the details privately.');
+  mcq(sqli, 'What does the "least privilege" principle suggest for the web app\'s database account?', ['Use the root/admin account so nothing ever fails', 'Give it only the permissions the app really needs', 'Share one account across all applications', 'Disable the password'], 1,
+    'If an injection ever slips through, a low-privilege account limits the damage (for example, no DROP or access to unrelated tables).');
+
+  /* ---------------- Cookies ---------------- */
+  const cook = mod('cookies', 'Cookie Security Lab', '🍪', 'Session management, cookie flags and common vulnerabilities.', 'lab', 4,
+`# Cookies and sessions
+HTTP has no memory. After you log in, the server gives your browser a random session ID inside a cookie, and your browser sends it back with every request. Whoever holds that cookie IS you as far as the server is concerned, so it must be protected.
+
+# Important cookie settings
+- HttpOnly: JavaScript cannot read the cookie. This blunts cookie theft through XSS (cross-site scripting).
+- Secure: the cookie is only sent over HTTPS, so it cannot be sniffed on public Wi-Fi.
+- SameSite: Strict or Lax stops the browser attaching the cookie to most cross-site requests (a CSRF defence). None allows cross-site use and REQUIRES Secure.
+- Expires / Max-Age: short lifetimes limit damage if a cookie leaks. Session cookies disappear when the browser closes.
+- Path and Domain: keep them as narrow as possible.
+
+# Session vulnerabilities
+- Session hijacking: an attacker steals a valid session ID (XSS, sniffing, malware).
+- Session fixation: the attacker plants a known session ID in the victim's browser BEFORE login. If the server keeps the same ID after login, the attacker is logged in too. Fix: issue a NEW session ID at login.
+- Predictable IDs: IDs must come from a cryptographically secure random generator.
+- Long-lived sessions on shared computers.
+
+# Good practice checklist
+- Regenerate the session ID on login, logout and privilege changes.
+- Destroy the session on the server when the user logs out.
+- Set HttpOnly, Secure and SameSite on every session cookie.
+- Never put passwords or personal data inside cookies.
+
+# Example header
+\`\`\`
+Set-Cookie: sessionid=9f3a...; HttpOnly; Secure; SameSite=Lax; Path=/
+\`\`\`
+
+# In this lab
+Use the Flag Simulator and the Session Fixation demo to watch attacks succeed or fail, then configure the cookie correctly for four real-world scenarios.`);
+  pos = 0;
+  const cookieQ = (title, scenario, ans, why, points = 20) => ch(cook, 'cookie', title, 'Choose the safest cookie settings that still make this scenario work.', { scenario }, ans, why, points);
+  cookieQ('Online banking session', 'A banking site runs on HTTPS. The login session cookie is only used by the server, and no page script ever needs to read it. It should not be sent when other websites trigger requests.',
+    { httponly: true, secure: true, samesite: ['Lax', 'Strict'], lifetime: ['session', 'short'] },
+    'HttpOnly blocks script theft, Secure blocks sniffing, SameSite stops cross-site sending, and a short/session lifetime limits exposure.');
+  cookieQ('"Remember me" for 30 days', 'A blog on HTTPS offers a "keep me logged in for 30 days" option. Only the blog itself uses this cookie.',
+    { httponly: true, secure: true, samesite: ['Lax', 'Strict'], lifetime: ['long'] },
+    'The long lifetime is the feature, but every protection stays on: a long-lived cookie is even more valuable to an attacker.');
+  cookieQ('Embedded chat widget', 'A support chat widget is embedded in other websites inside an iframe and needs its cookie to be sent in cross-site requests. The widget runs only over HTTPS.',
+    { httponly: true, secure: true, samesite: ['None'], lifetime: ['session', 'short'] },
+    'Cross-site use requires SameSite=None, and browsers only accept None together with Secure. Keep HttpOnly and a short lifetime.');
+  cookieQ('Admin panel on shared lab PCs', 'The admin panel is used on shared computers in a lab. It should use the strictest settings and must log the user out when the browser closes.',
+    { httponly: true, secure: true, samesite: ['Strict'], lifetime: ['session'] },
+    'Strict SameSite and a session-only lifetime give the least exposure on shared machines.');
+  mcq(cook, 'What does the HttpOnly flag do?', ['Forces the cookie to use HTTPS', 'Prevents JavaScript from reading the cookie', 'Deletes the cookie after one hour', 'Stops other sites from receiving the cookie'], 1,
+    'HttpOnly hides the cookie from document.cookie, so an XSS script cannot simply copy the session ID.');
+  mcq(cook, 'How do you prevent session fixation?', ['Make session IDs longer', 'Issue a brand new session ID after the user logs in', 'Only allow login from one country', 'Store the session ID in the URL'], 1,
+    'If the ID changes at login, the ID an attacker planted beforehand becomes useless.', 10);
+
+  /* ---------------- Quiz ---------------- */
+  const quiz = mod('quiz', 'Interactive Quizzes', '🧠', 'Ten questions with instant feedback and saved scores.', 'quiz', 5,
+`# Web Security Fundamentals Quiz
+Answer all 10 questions, then submit to see your score and an explanation for every question.
+
+- Your first correct answer to each question earns points; retakes are free practice.
+- Every attempt is saved to your history.
+- A perfect score unlocks an achievement.`);
+  pos = 0;
+  mcq(quiz, 'What does HTTPS give you that plain HTTP does not?', ['Faster downloads', 'Encrypted traffic and proof you reached the real server', 'Protection from all viruses', 'Free hosting'], 1, 'HTTPS encrypts data in transit and authenticates the server with a certificate. It does not make a site trustworthy by itself.');
+  mcq(quiz, 'Which is the strongest password approach?', ['A short word with a number at the end', 'The same strong password on every site', 'A long, unique passphrase stored in a password manager', 'Your birthday'], 2, 'Length and uniqueness matter most. A password manager makes unique passwords practical.');
+  mcq(quiz, 'What is multi-factor authentication (MFA)?', ['Using two different usernames', 'Proving identity with more than one kind of evidence', 'Logging in on two devices at once', 'A password with 2 words'], 1, 'MFA combines something you know, have or are, so a stolen password alone is not enough.');
+  mcq(quiz, 'Cross-site scripting (XSS) is when an attacker…', ['Floods a server with traffic', 'Gets a website to run the attacker\'s script in other users\' browsers', 'Guesses passwords one by one', 'Reads data off the network cable'], 1, 'XSS injects script into a trusted page. Defences: output encoding, input validation, Content-Security-Policy and HttpOnly cookies.');
+  mcq(quiz, 'You get an email from "your bank" asking you to click and confirm your PIN. Best response?', ['Click quickly before it expires', 'Reply with the PIN', 'Do not click; open the bank\'s official site yourself or call the number on your card', 'Forward it to all your friends'], 2, 'Never use links in unexpected messages. Go to the real site directly and report the message.');
+  mcq(quiz, 'Parameterised (prepared) queries mainly protect against…', ['Phishing', 'SQL injection', 'Weak Wi-Fi', 'Screen glare'], 1, 'They keep SQL code and user data separate so input cannot change the query.');
+  mcq(quiz, 'What is the purpose of a CSRF token?', ['To encrypt the database', 'To prove a state-changing request really came from the site\'s own form', 'To speed up page loads', 'To store the user\'s password'], 1, 'The secret token cannot be read by another website, so forged requests fail the check.');
+  mcq(quiz, 'Which habit is safest on public Wi-Fi?', ['Log in to banking without worry because the Wi-Fi has a password', 'Use HTTPS sites and avoid sensitive tasks, or use a trusted VPN', 'Turn off your screen lock', 'Share files with everyone nearby'], 1, 'Open networks can be monitored or spoofed. HTTPS and a VPN reduce the risk; sensitive tasks are better done on a trusted connection.');
+  mcq(quiz, 'Why should you install software updates promptly?', ['They only change the colours', 'They fix known vulnerabilities that attackers actively exploit', 'They delete your files', 'They make the device slower on purpose'], 1, 'Many attacks use flaws that already have patches. Delayed updates leave known holes open.');
+  mcq(quiz, 'The principle of "least privilege" means…', ['Everyone is admin to avoid delays', 'Give each account only the access it needs for its job', 'Use the cheapest security tools', 'Remove all passwords'], 1, 'Limiting access limits the damage when an account or app is compromised.');
+
+  /* ---------------- Achievements ---------------- */
+  const ach = (slug, name, icon, description, criteria, value = null, moduleId = null) => d.achievements.push({ id: id(), slug, name, icon, description, criteria, value, moduleId, active: true });
+  ach('rookie', 'Rookie', '🛡️', 'Joined CyberShield', 'first_login');
+  ach('phish-spotter', 'Phish Spotter', '🎣', 'Finished every Phishing Simulator challenge', 'module_complete', null, phish.id);
+  ach('token-guardian', 'Token Guardian', '🔐', 'Finished the CSRF Security Lab', 'module_complete', null, csrf.id);
+  ach('query-defender', 'Query Defender', '🗄️', 'Finished the SQL Injection Lab', 'module_complete', null, sqli.id);
+  ach('cookie-keeper', 'Cookie Keeper', '🍪', 'Finished the Cookie Security Lab', 'module_complete', null, cook.id);
+  ach('quiz-master', 'Quiz Master', '🧠', 'Completed the quiz', 'module_complete', null, quiz.id);
+  ach('perfect-score', 'Perfect Score', '💯', 'Scored 100% on a quiz', 'perfect_quiz');
+  ach('rising-star', 'Rising Star', '⭐', 'Reached 100 points', 'points_at_least', 100);
+  ach('cyber-pro', 'Cyber Pro', '⚡', 'Reached 300 points', 'points_at_least', 300);
+  ach('challenger', 'Challenger', '🎯', 'Completed 10 challenges', 'challenges_at_least', 10);
+  ach('champion', 'CyberShield Champion', '🏆', 'Completed every published module', 'all_modules');
+}
+
+/* ================================================================
+   UI – shared widgets, router, authentication screens
+   ================================================================ */
+
+let user = null;
+
+function toast(msg, bad) {
+  const t = h('div', { class: 'toast' + (bad ? ' bad' : ''), role: 'status' }, msg);
+  document.body.append(t);
+  setTimeout(() => t.remove(), 3200);
+}
+function notifyAch(list) { (list || []).forEach((a, i) => setTimeout(() => toast(`${a.icon} Achievement unlocked: ${a.name}`), i * 900)); }
+function card(title, ...kids) { return h('div', { class: 'card' }, title ? h('h3', null, title) : null, ...kids); }
+function pill(text, cls = '') { return h('span', { class: 'pill ' + cls }, text); }
+function statCard(icon, num, label) { return h('div', { class: 'card stat hover' }, h('div', null, icon), h('div', { class: 'num grad' }, String(num)), h('div', { class: 'lbl' }, label)); }
+function note(text) { return h('p', { class: 'empty' }, text); }
+function table(headers, rows) {
+  return h('div', { class: 'tbl-wrap' }, h('table', { class: 'tbl' },
+    h('thead', null, h('tr', null, headers.map(x => h('th', null, x)))),
+    h('tbody', null, rows.length
+      ? rows.map(r => h('tr', null, r.map((c, i) => h('td', { 'data-label': headers[i] || '', class: i === 0 ? 'c-first' : (headers[i] === '' ? 'c-act' : '') }, c))))
+      : h('tr', null, h('td', { colspan: headers.length, class: 'empty' }, 'Nothing to show yet.')))));
+}
+function pager(page, pages, onGo) {
+  if (pages <= 1) return null;
+  return h('div', { class: 'pager' },
+    h('button', { class: 'btn ghost sm', disabled: page <= 1, onclick: () => onGo(page - 1) }, '← Prev'),
+    h('span', null, `Page ${page} of ${pages}`),
+    h('button', { class: 'btn ghost sm', disabled: page >= pages, onclick: () => onGo(page + 1) }, 'Next →'));
+}
+function field(label, input, hint) { return h('div', { class: 'fld' }, h('label', null, label), input, hint ? h('div', { class: 'hint' }, hint) : null); }
+function selectEl(options, value, attrs) {
+  return h('select', attrs, options.map(o => { const [v, l] = Array.isArray(o) ? o : [o, o]; return h('option', { value: v, selected: String(v) === String(value) }, l); }));
+}
+
+/* ---------- modal + confirm ---------- */
+function modal(title, body, opts = {}) {
+  const back = h('div', { class: 'modal-back', onclick: e => { if (e.target === back) close(); } });
+  const close = () => { back.remove(); document.removeEventListener('keydown', esc); };
+  const esc = e => { if (e.key === 'Escape') close(); };
+  document.addEventListener('keydown', esc);
+  back.append(h('div', { class: 'modal' + (opts.wide ? ' wide' : ''), role: 'dialog', 'aria-modal': 'true', 'aria-label': title },
+    h('div', { class: 'modal-head' }, h('h3', null, title), h('button', { class: 'x', 'aria-label': 'Close', onclick: close }, '✕')), body));
+  document.body.append(back);
+  return { close };
+}
+function confirmBox(message, okLabel = 'Confirm') {
+  return new Promise(res => {
+    const m = modal('Please confirm', h('div', null, h('p', null, message),
+      h('div', { class: 'btn-row' },
+        h('button', { class: 'btn ghost', onclick: () => { m.close(); res(false); } }, 'Cancel'),
+        h('button', { class: 'btn danger', onclick: () => { m.close(); res(true); } }, okLabel))));
+  });
+}
+const closeModals = () => document.querySelectorAll('.modal-back').forEach(n => n.remove());
+
+/* ---------- lesson renderer (plain-text markup -> safe DOM) ---------- */
+function renderLesson(text) {
+  const box = h('div', { class: 'lesson' });
+  const lines = String(text || '').split('\n');
+  let para = [], list = null, code = null;
+  const flushPara = () => { if (para.length) { box.append(h('p', null, para.join(' '))); para = []; } };
+  const flushList = () => { if (list) { box.append(h('ul', null, list.map(x => h('li', null, x)))); list = null; } };
+  for (const raw of lines) {
+    if (raw.trim().startsWith('```')) {
+      if (code) { box.append(h('pre', { class: 'codebox' }, code.join('\n'))); code = null; } else { flushPara(); flushList(); code = []; }
+      continue;
+    }
+    if (code) { code.push(raw); continue; }
+    const line = raw.trimEnd();
+    if (!line.trim()) { flushPara(); flushList(); continue; }
+    if (line.startsWith('# ')) { flushPara(); flushList(); box.append(h('h4', null, line.slice(2))); continue; }
+    if (line.startsWith('- ')) { flushPara(); (list = list || []).push(line.slice(2)); continue; }
+    flushList();
+    para.push(line.trim());
+  }
+  flushPara(); flushList();
+  if (code) box.append(h('pre', { class: 'codebox' }, code.join('\n')));
+  return box;
+}
+
+/* ---------- router ---------- */
+const route = () => (location.hash || '#/').slice(1).split('?')[0].split('/').filter(Boolean);
+const go = p => { location.hash = '#' + p; };
+function rerender() { const y = window.scrollY; render(); window.scrollTo(0, y); }
+
+function render() {
+  closeModals();
+  user = currentUser();
+  const root = $('#app');
+  root.replaceChildren();
+  const r = route();
+  if (!user) {
+    root.append(authView());
+    return;
+  }
+  if (user.role === 'admin') {
+    if (r[0] !== 'admin' && r[0] !== 'profile') { go('/admin'); return; }
+  } else if (r[0] === 'admin') {
+    logAct('security.admin_denied', { path: r.join('/') });
+    saveDb();
+    toast('Administrator access required.', true);
+    go('/dashboard');
+    return;
+  }
+  let page;
+  let key = r[0] || 'dashboard';
+  try {
+    if (r[0] === 'admin') page = adminPage(r);
+    else if (r[0] === 'm' && r[1]) { page = moduleView(r[1]); key = 'm/' + r[1]; }
+    else if (r[0] === 'leaderboard') page = leaderboardView();
+    else if (r[0] === 'achievements') page = achievementsView();
+    else if (r[0] === 'notifications') page = notificationsView();
+    else if (r[0] === 'profile') page = profileView();
+    else { page = dashboardView(); key = 'dashboard'; }
+  } catch (e) {
+    page = card('Something went wrong', note(e && e.message ? e.message : 'Unexpected error.'));
+  }
+  root.append(shell(page, r[0] === 'admin' ? 'admin/' + (r[1] || '') : key));
+  window.scrollTo(0, 0);
+}
+
+function shell(page, active) {
+  const unread = db.notifs.filter(n => n.uid === user.id && !n.read).length;
+  const side = h('nav', { class: 'sidebar', id: 'sidebar', 'aria-label': 'Main navigation' });
+  const link = (icon, text, path, key, badge) => side.append(h('a', { href: '#' + path, class: active === key ? 'active' : '', onclick: () => side.classList.remove('open') }, h('span', null, icon), h('span', null, text), badge ? h('small', { class: 'nav-badge' }, String(badge)) : null));
+  if (user.role === 'admin') {
+    link('📊', 'Overview', '/admin', 'admin/');
+    link('👥', 'Students & users', '/admin/students', 'admin/students');
+    link('📚', 'Learning content', '/admin/content', 'admin/content');
+    link('🎖️', 'Achievements', '/admin/achievements', 'admin/achievements');
+    link('📈', 'Reports', '/admin/reports', 'admin/reports');
+    link('🧾', 'Activity log', '/admin/activity', 'admin/activity');
+    link('💾', 'Backup & data', '/admin/data', 'admin/data');
+    side.append(h('hr'));
+    link('👤', 'My profile', '/profile', 'profile');
+  } else {
+    link('📊', 'Dashboard', '/dashboard', 'dashboard');
+    side.append(h('hr'));
+    db.modules.filter(m => m.published).sort((a, b) => a.position - b.position || a.id - b.id).forEach(m => link(m.icon, m.title, '/m/' + m.slug, 'm/' + m.slug));
+    side.append(h('hr'));
+    link('🏆', 'Leaderboard', '/leaderboard', 'leaderboard');
+    link('🎖️', 'Achievements', '/achievements', 'achievements');
+    link('🔔', 'Notifications', '/notifications', 'notifications', unread || null);
+    link('👤', 'My profile', '/profile', 'profile');
+  }
+  return h('div', { class: 'app-shell' },
+    h('header', { class: 'topbar' },
+      h('button', { class: 'menu-btn', 'aria-label': 'Toggle menu', onclick: () => side.classList.toggle('open') }, '☰'),
+      h('div', { class: 'logo' }, '🛡️ ', h('span', { class: 'grad' }, 'CyberShield')),
+      h('div', { class: 'spacer' }),
+      user.role === 'student' ? h('div', { class: 'chip pts-chip', title: 'Your points' }, '⭐ ', h('b', { id: 'ptsChip' }, String(total(user.id)))) : h('div', { class: 'chip' }, '⚙️ Admin'),
+      h('div', { class: 'chip' }, h('div', { class: 'avatar' }, user.name.charAt(0).toUpperCase()), h('span', { class: 'nm' }, user.name)),
+      h('button', { class: 'btn ghost sm', onclick: () => { Auth.logout(); go('/'); render(); } }, 'Logout')),
+    h('div', { class: 'layout' }, side, h('main', null, !persistent ? h('div', { class: 'banner bad' }, '⚠️ Browser storage is blocked or full (private mode?). Your progress will NOT be saved.') : null, page)));
+}
+function refreshChrome() {
+  const p = $('#ptsChip');
+  if (p && user) p.textContent = String(total(user.id));
+}
+
+/* ---------- authentication screens ---------- */
+function strengthMeter(input) {
+  const m = h('div', { class: 'meter', 'data-s': '0' }, h('i'), h('i'), h('i'), h('i'));
+  const rules = [['8+ characters', x => x.length >= 8], ['Uppercase', x => /[A-Z]/.test(x)], ['Lowercase', x => /[a-z]/.test(x)], ['Number', x => /\d/.test(x)], ['Symbol (! @ # $ …)', x => /[^A-Za-z0-9]/.test(x)]];
+  const items = rules.map(r => h('li', null, '○ ' + r[0]));
+  const update = () => {
+    const v = input.value;
+    m.setAttribute('data-s', v ? Math.max(1, pwStrength(v)) : 0);
+    rules.forEach((r, i) => { const okk = r[1](v); items[i].textContent = (okk ? '✔ ' : '○ ') + r[0]; items[i].className = okk ? 'ok' : ''; });
+  };
+  input.addEventListener('input', update);
+  return h('div', null, m, h('ul', { class: 'reqs' }, items));
+}
+
+function authView() {
+  const wrap = h('div', { class: 'auth-wrap' });
+  const msg = h('div', { class: 'alert', role: 'alert' });
+  const say = (t, ok) => { msg.textContent = t; msg.className = 'alert show ' + (ok ? 'ok' : 'err'); };
+  const busy = (btn, on) => { btn.disabled = on; };
+  const brand = h('div', { class: 'brand' }, h('span', { class: 'shield' }, '🛡️'), h('h1', { class: 'grad' }, 'CyberShield'), h('p', null, 'Interactive Web Security Awareness System'));
+  const cardEl = h('div', { class: 'auth-card' }, brand);
+  wrap.append(cardEl);
+  const inp = (id, type, ph, extra) => h('input', { id, type, placeholder: ph || '', maxlength: type === 'password' ? 64 : 254, ...extra });
+
+  /* first run: create the first administrator */
+  if (!hasAdmin()) {
+    const f = { name: inp('sName', 'text', 'Instructor name', { maxlength: 60 }), email: inp('sEmail', 'email', 'instructor@school.edu', { autocomplete: 'username' }), pw: inp('sPw', 'password', '', { autocomplete: 'new-password' }), cf: inp('sCf', 'password', '', { autocomplete: 'new-password' }) };
+    const btn = h('button', { class: 'btn full', type: 'submit' }, 'Create administrator account');
+    cardEl.append(h('div', { class: 'banner' }, '👋 First-time setup: create the administrator (instructor) account. This screen only appears while no administrator exists.'),
+      h('form', { novalidate: true, onsubmit: async e => {
+        e.preventDefault(); busy(btn, true);
+        const r = await Auth.setupAdmin({ name: f.name.value, email: f.email.value, password: f.pw.value, confirm: f.cf.value });
+        busy(btn, false);
+        if (!r.ok) return say(r.error);
+        go('/admin'); render();
+      } }, field('Full name', f.name), field('Email', f.email), field('Password', f.pw), strengthMeter(f.pw), h('div', { class: 'hint' }, '8+ characters with uppercase, lowercase, a number and a symbol.'), field('Confirm password', f.cf), msg, btn));
+    return wrap;
+  }
+
+  const tabs = { login: h('button', { type: 'button', class: 'active' }, 'Login'), reg: h('button', { type: 'button' }, 'Register'), reset: h('button', { type: 'button' }, 'Reset') };
+  const panes = {};
+  const show = k => { for (const x in tabs) { tabs[x].classList.toggle('active', x === k); panes[x].classList.toggle('hidden', x !== k); } msg.className = 'alert'; };
+  for (const k in tabs) tabs[k].addEventListener('click', () => show(k));
+  cardEl.append(h('div', { class: 'tabs' }, tabs.login, tabs.reg, tabs.reset));
+
+  /* login */
+  {
+    const em = inp('lEmail', 'email', 'you@student.edu', { autocomplete: 'username' }), pw = inp('lPass', 'password', '••••••••', { autocomplete: 'current-password' });
+    const btn = h('button', { class: 'btn full', type: 'submit' }, 'Access Dashboard →');
+    panes.login = h('form', { novalidate: true, onsubmit: async e => {
+      e.preventDefault();
+      if (!EMAIL_RE.test(em.value.trim()) || !pw.value) return say('Enter your email and password.');
+      busy(btn, true);
+      const r = await Auth.login(em.value, pw.value);
+      busy(btn, false);
+      if (!r.ok) { pw.value = ''; return say(r.error); }
+      go('/'); render();
+    } }, field('Email', em), field('Password', pw), btn);
+  }
+  /* register */
+  {
+    const f = { name: inp('rName', 'text', 'Juan Dela Cruz', { maxlength: 60 }), sid: inp('rSid', 'text', '2024-0100', { maxlength: 20 }), course: selectEl([['', 'Choose…'], ...COURSES], ''), email: inp('rEmail', 'email', 'you@student.edu'), pw: inp('rPass', 'password', '', { autocomplete: 'new-password' }), cf: inp('rConf', 'password', '', { autocomplete: 'new-password' }) };
+    const btn = h('button', { class: 'btn full', type: 'submit' }, 'Create Account');
+    panes.reg = h('form', { class: 'hidden', novalidate: true, onsubmit: async e => {
+      e.preventDefault(); busy(btn, true);
+      const r = await Auth.register({ name: f.name.value, sid: f.sid.value, course: f.course.value, email: f.email.value, password: f.pw.value, confirm: f.cf.value });
+      busy(btn, false);
+      if (!r.ok) return say(r.error);
+      go('/dashboard'); render();
+    } }, field('Full name', f.name), h('div', { class: 'row2' }, field('Student ID', f.sid), field('Course', f.course)), field('Email', f.email), field('Password', f.pw), strengthMeter(f.pw), h('div', { class: 'hint' }, '8+ characters with uppercase, lowercase, a number and a symbol.'), field('Confirm password', f.cf), btn);
+  }
+  /* password reset with an instructor-issued code */
+  {
+    const f = { email: inp('pEmail', 'email', 'you@student.edu'), code: inp('pCode', 'text', 'Code from your instructor', { maxlength: 12, autocomplete: 'off' }), pw: inp('pPass', 'password', '', { autocomplete: 'new-password' }), cf: inp('pConf', 'password', '', { autocomplete: 'new-password' }) };
+    const btn = h('button', { class: 'btn full', type: 'submit' }, 'Set new password');
+    panes.reset = h('form', { class: 'hidden', novalidate: true, onsubmit: async e => {
+      e.preventDefault(); busy(btn, true);
+      const r = await Auth.resetWithCode(f.email.value, f.code.value, f.pw.value, f.cf.value);
+      busy(btn, false);
+      if (!r.ok) return say(r.error);
+      show('login'); say('Password updated. You can log in now.', true);
+    } }, h('p', { class: 'hint' }, 'Forgot your password? Ask your instructor for a one-time reset code (Admin → Students → View → "Create reset code"), then enter it here.'), field('Email', f.email), field('Reset code', f.code), field('New password', f.pw), strengthMeter(f.pw), field('Confirm new password', f.cf), btn);
+  }
+  cardEl.append(panes.login, panes.reg, panes.reset, msg);
+  cardEl.append(h('p', { class: 'hint center' }, '🔒 Passwords are salted and hashed (PBKDF2). Accounts are stored in this browser.'));
+  return wrap;
+}
+
+/* ================================================================
+   UI – student pages, labs and quizzes
+   ================================================================ */
+
+let gradedHook = null;
+function submitAnswer(c, answer) {
+  const g = grade(user.id, c, answer);
+  refreshChrome();
+  notifyAch(g.newAch);
+  if (gradedHook) gradedHook(c, g);
+  return g;
+}
+function showFeedback(out, g, extra) {
+  out.replaceChildren(
+    h('div', { class: 'feedback ' + (g.correct ? 'good' : 'bad') }, h('b', null, g.correct ? '✅ Correct!' : '❌ Not quite.'),
+      g.earned ? ` +${g.earned} points` : '', g.correct && g.already ? ' (already completed, practice only)' : ''),
+    extra || null, g.explanation ? h('p', { class: 'expl' }, g.explanation) : null);
+}
+
+/* ---------------- dashboard ---------------- */
+function dashboardView() {
+  const mods = db.modules.filter(m => m.published).sort((a, b) => a.position - b.position || a.id - b.id);
+  const prog = progress(user.id);
+  const rank = rankOf(user.id);
+  const students = board();
+  const tot = Object.values(prog).reduce((s, p) => s + p.total, 0), done = Object.values(prog).reduce((s, p) => s + p.done, 0);
+  const pct = tot ? Math.round(done * 100 / tot) : 0;
+  const doneMods = mods.filter(m => prog[m.id] && prog[m.id].done >= prog[m.id].total).length;
+  const mine = new Set(db.userAch.filter(x => x.uid === user.id).map(x => x.aid));
+  const achs = db.achievements.filter(a => a.active);
+  const recent = db.logs.filter(l => l.uid === user.id && ['challenge.completed', 'achievement.awarded', 'quiz.submitted', 'auth.login'].includes(l.action)).slice(0, 8);
+  const recentText = l => l.action === 'challenge.completed' ? `Completed a challenge (+${l.details.points || 0} pts)` : l.action === 'achievement.awarded' ? 'Earned an achievement' : l.action === 'quiz.submitted' ? `Submitted a quiz (${l.details.score}/${l.details.total})` : 'Signed in';
+
+  return h('div', null,
+    h('section', { class: 'hello' }, h('h2', null, 'Welcome back, ', h('span', { class: 'grad' }, user.name.split(' ')[0]), ' 👋'), h('p', null, `${user.course} · ID ${user.sid}`)),
+    h('section', { class: 'grid stats' },
+      statCard('⭐', total(user.id), 'Total points'), statCard('✅', `${doneMods}/${mods.length}`, 'Modules completed'),
+      statCard('🎖️', mine.size, 'Badges earned'), statCard('🥇', rank ? '#' + rank : '—', students.length ? `Rank of ${students.length} students` : 'Leaderboard rank')),
+    h('section', { class: 'grid cols' },
+      card('🎯 Training modules', h('div', { class: 'grid mods flat' }, mods.map(m => {
+        const p = prog[m.id] || { total: 0, done: 0 }, pc = p.total ? Math.round(p.done * 100 / p.total) : 0;
+        return h('a', { class: 'card mod hover', href: '#/m/' + m.slug }, h('div', { class: 'ico' }, m.icon), h('h4', null, m.title), h('p', null, m.summary),
+          h('div', { class: 'bar' }, h('i', { style: `width:${pc}%` })),
+          h('span', { class: 'tag ' + (pc === 100 ? 'done' : '') }, pc === 100 ? '✔ Completed' : `${p.done}/${p.total} done`), ' ', h('span', { class: 'tag pts' }, pc === 100 ? 'Review' : p.done ? 'Continue' : 'Start'));
+      }))),
+      h('div', { class: 'stack' },
+        card('📈 Overall progress', h('div', { class: 'ring', style: `--p:${pct}` }, h('span', null, pct + '%')), h('div', { class: 'bar' }, h('i', { style: `width:${pct}%` })), h('p', { class: 'hint' }, tot ? `${done} of ${tot} challenges complete.` : 'No published modules yet.')),
+        card('🏆 Leaderboard (top 5)', h('ul', { class: 'list' }, students.slice(0, 5).map((r, i) => h('li', null, h('span', { class: 'rank ' + (i < 3 ? 'r' + (i + 1) : '') }, String(i + 1)), h('span', { class: r.id === user.id ? 'me' : '' }, r.name + (r.id === user.id ? ' (you)' : '')), h('span', { class: 'time' }, r.points + ' pts'))), students.length ? null : h('li', { class: 'empty' }, 'No students yet.')), h('a', { class: 'linkbtn', href: '#/leaderboard' }, 'View full leaderboard →')))),
+    h('section', { class: 'grid cols' },
+      card('🎖️ Badges', h('div', { class: 'badges' }, achs.map(a => { const e = mine.has(a.id); const el = h('div', { class: 'badge ' + (e ? 'earned' : 'locked'), title: a.description }, h('span', { class: 'b' }, a.icon), h('span', null, a.name)); return el; }))),
+      card('🕒 Recent activity', h('ul', { class: 'list' }, recent.map(l => h('li', null, h('span', null, recentText(l)), h('span', { class: 'time' }, ago(l.at)))), recent.length ? null : h('li', { class: 'empty' }, 'No activity yet. Start a module!')))));
+}
+
+/* ---------------- module page ---------------- */
+function moduleView(slug) {
+  const m = db.modules.find(x => x.slug === slug && x.published);
+  if (!m) return card('Module not found', note('This module does not exist or is not published.'), h('a', { class: 'btn sm', href: '#/dashboard' }, '← Dashboard'));
+  const cs = publishedChallenges(m);
+  const res = () => db.results[user.id] || {};
+  const bar = h('i'), progTxt = h('span');
+  const updateProgress = () => {
+    const d = cs.filter(c => res()[c.id] && res()[c.id].done).length, p = cs.length ? Math.round(d * 100 / cs.length) : 0;
+    bar.style.width = p + '%';
+    progTxt.textContent = `${d}/${cs.length} complete`;
+  };
+  const statusUpdaters = new Map();
+  gradedHook = c => { const f = statusUpdaters.get(c.id); if (f) f(); updateProgress(); };
+
+  const page = h('div', null,
+    h('div', { class: 'mod-head' }, h('span', { class: 'ico big' }, m.icon), h('div', null, h('h2', null, m.title), h('p', { class: 'muted' }, m.summary))),
+    h('div', { class: 'bar thick' }, bar), h('p', { class: 'hint' }, progTxt),
+    h('details', { class: 'card lesson-card', open: true }, h('summary', null, '📖 Lesson'), renderLesson(m.lesson)));
+  if (m.slug === 'cookies') page.append(cookieSimulator(), fixationDemo());
+
+  if (m.type === 'quiz') page.append(quizView(m, cs));
+  else {
+    if (!cs.length) page.append(card(null, note('No challenges have been published for this module yet.')));
+    cs.forEach(c => page.append(challengeCard(c, statusUpdaters)));
+  }
+  updateProgress();
+  return page;
+}
+
+function challengeCard(c, statusUpdaters) {
+  const st = h('span', { class: 'pill' });
+  const setStatus = () => {
+    const r = (db.results[user.id] || {})[c.id];
+    if (r && r.done) { st.className = 'pill ok'; st.textContent = `✔ Completed +${r.points}`; } else { st.className = 'pill'; st.textContent = `${c.points} pts`; }
+  };
+  statusUpdaters.set(c.id, setStatus);
+  setStatus();
+  let body;
+  switch (c.type) {
+    case 'mcq': body = mcqBody(c); break;
+    case 'phish': body = phishBody(c); break;
+    case 'sqli': body = sqliBody(c); break;
+    case 'cookie': body = cookieBody(c); break;
+    case 'csrf_lab': body = csrfBody(c); break;
+    default: body = note('Unsupported challenge type.');
+  }
+  return h('div', { class: 'card chal' }, h('div', { class: 'chal-head' }, h('h3', null, c.title), st), c.prompt ? h('p', { class: 'prompt' }, c.prompt) : null, body);
+}
+
+function mcqBody(c) {
+  let chosen = -1;
+  const out = h('div', { class: 'out' });
+  const name = 'q' + c.id;
+  const labels = c.payload.options.map((o, i) => h('label', { class: 'opt' }, h('input', { type: 'radio', name, value: String(i), onchange: () => { chosen = i; } }), h('span', null, o)));
+  return h('div', null, h('div', { class: 'opts' }, labels),
+    h('button', { class: 'btn sm', onclick: () => {
+      if (chosen < 0) return toast('Pick an answer first.', true);
+      const g = submitAnswer(c, { index: chosen });
+      labels.forEach((l, i) => { l.classList.remove('right', 'wrong'); if (i === chosen) l.classList.add(g.correct ? 'right' : 'wrong'); });
+      showFeedback(out, g);
+    } }, 'Submit answer'), out);
+}
+
+/* ---- phishing ---- */
+function phishBody(c) {
+  const p = c.payload, flags = new Set(), out = h('div', { class: 'out' });
+  const status = h('div', { class: 'linkstatus' }, '🔎 Tap or hover a link to reveal where it REALLY goes. (Nothing is opened.)');
+  const showUrl = u => { status.textContent = '🔗 Real destination: ' + u; };
+  const fakeLink = l => h('a', { href: '#', class: 'fakelink', onclick: e => { e.preventDefault(); showUrl(l.url); }, onmouseenter: () => showUrl(l.url), onfocus: () => showUrl(l.url) }, l.text);
+  let media;
+  const body = Array.isArray(p.body) ? p.body : p.body ? [p.body] : [];
+  if (p.kind === 'email') {
+    media = h('div', { class: 'email' }, h('div', { class: 'email-head' }, h('div', null, h('b', null, 'From: '), p.from || ''), h('div', null, h('b', null, 'To: '), p.to || ''), h('div', null, h('b', null, 'Subject: '), p.subject || '')),
+      h('div', { class: 'email-body' }, body.map(x => h('p', null, x)), p.attachment ? h('div', { class: 'attach' }, '📎 ', p.attachment) : null, (p.links || []).length ? h('p', null, (p.links || []).map(l => [fakeLink(l), ' '])) : null));
+  } else if (p.kind === 'sms') {
+    media = h('div', { class: 'sms' }, h('div', { class: 'sms-from' }, '📱 ', p.from || 'Unknown'), h('div', { class: 'bubble' }, body.map(x => h('p', null, x)), (p.links || []).length ? h('p', null, (p.links || []).map(l => [fakeLink(l), ' '])) : null));
+  } else {
+    media = h('div', { class: 'addr' }, h('span', { class: 'addr-ico' }, '🌐'), h('a', { href: '#', class: 'fakelink', onclick: e => { e.preventDefault(); showUrl(p.url); } }, p.url));
+  }
+  const flagBoxes = Object.keys(FLAG_LABELS).map(k => h('label', { class: 'chk' }, h('input', { type: 'checkbox', onchange: e => { if (e.target.checked) flags.add(k); else flags.delete(k); } }), FLAG_LABELS[k]));
+  const decide = verdict => {
+    const g = submitAnswer(c, { verdict, flags: [...flags] });
+    const d = g.detail;
+    const extra = h('div', { class: 'flagres' },
+      h('div', null, h('b', null, 'This was: '), pill(d.verdict === 'phishing' ? '🎣 Phishing' : '✅ Legitimate', d.verdict === 'phishing' ? 'bad' : 'ok')),
+      d.found.length ? h('div', null, '✔ Red flags you found: ', d.found.map(k => FLAG_LABELS[k] || k).join('; ')) : null,
+      d.missed.length ? h('div', null, '➕ You missed: ', d.missed.map(k => FLAG_LABELS[k] || k).join('; ')) : null,
+      d.wrong.length ? h('div', null, '✖ Not actually present: ', d.wrong.map(k => FLAG_LABELS[k] || k).join('; ')) : null);
+    showFeedback(out, g, extra);
+  };
+  return h('div', null, media, status, h('details', { class: 'flagbox' }, h('summary', null, '🚩 Tick the red flags you notice (optional)'), h('div', { class: 'chks' }, flagBoxes)),
+    h('div', { class: 'btn-row' }, h('button', { class: 'btn danger sm', onclick: () => decide('phishing') }, '🎣 It\'s phishing'), h('button', { class: 'btn sm', onclick: () => decide('legit') }, '✅ It\'s legitimate')), out);
+}
+
+/* ---- SQL injection ---- */
+function sqliBody(c) {
+  const p = c.payload, inputs = {}, out = h('div', { class: 'out' });
+  let secure = false;
+  const preview = h('pre', { class: 'codebox sql' });
+  const drawPreview = () => {
+    preview.replaceChildren();
+    const parts = p.template.split(/(\{\w+\})/);
+    for (const part of parts) {
+      const m = part.match(/^\{(\w+)\}$/);
+      if (!m) preview.append(part);
+      else if (secure) preview.append(h('span', { class: 'ph' }, '?'));
+      else preview.append(h('span', { class: 'inj' }, inputs[m[1]] || ''));
+    }
+    if (secure) preview.append('\n-- bound parameters: ' + JSON.stringify(p.fields.map(f => inputs[f.name] || '')));
+  };
+  p.fields.forEach(f => { inputs[f.name] = ''; });
+  const fields = p.fields.map(f => field(f.label || f.name, h('input', { type: 'text', maxlength: 300, autocomplete: 'off', spellcheck: 'false', oninput: e => { inputs[f.name] = e.target.value; drawPreview(); } })));
+  const secureBox = h('label', { class: 'chk' }, h('input', { type: 'checkbox', onchange: e => { secure = e.target.checked; drawPreview(); out.replaceChildren(); } }), '🛡️ Use a prepared statement (secure version)');
+  const hint = p.hint ? h('details', null, h('summary', null, '💡 Hint'), h('p', { class: 'expl' }, p.hint)) : null;
+  const run = () => {
+    const res = SqlLab.run(p.template, inputs, secure);
+    const nodes = [];
+    nodes.push(h('div', { class: 'qline' }, h('b', null, 'Query sent to the (simulated) database:'), h('pre', { class: 'codebox' }, res.query)));
+    if (res.error) nodes.push(h('div', { class: 'feedback bad' }, '⚠️ Database error: ' + res.error));
+    else {
+      const keys = res.rows.length ? Object.keys(res.rows[0]) : [];
+      nodes.push(res.rows.length ? table(keys, res.rows.map(r => keys.map(k => String(r[k])))) : h('div', { class: 'feedback bad' }, 'No rows returned.'));
+    }
+    if (!secure && SqlLab.goalReached(p.goalHint || c.answer.goal, res, inputs)) {
+      const g = submitAnswer(c, { inputs });
+      nodes.push(h('div', { class: 'feedback good' }, h('b', null, '🎯 Injection successful! '), g.earned ? `+${g.earned} points. ` : (g.already ? '(already completed) ' : ''), 'Now tick the secure box and run it again to see the defence.'), g.explanation ? h('p', { class: 'expl' }, g.explanation) : null);
+    } else if (secure) nodes.push(h('div', { class: 'feedback good' }, '🛡️ With a prepared statement the input is treated as plain data, so the injection has no effect.'));
+    out.replaceChildren(...nodes);
+  };
+  drawPreview();
+  return h('div', null, h('div', { class: 'sqlform' }, fields), h('div', { class: 'hint' }, 'Query that will be built from your input (your text is highlighted):'), preview, secureBox, hint,
+    h('div', { class: 'btn-row' }, h('button', { class: 'btn sm', onclick: run }, '▶ Run query')), out);
+}
+
+/* ---- cookie scenario ---- */
+function cookieBody(c) {
+  const a = { httponly: false, secure: false, samesite: '', lifetime: 'session' };
+  const out = h('div', { class: 'out' });
+  const header = h('pre', { class: 'codebox' });
+  const draw = () => {
+    const life = a.lifetime === 'short' ? '; Max-Age=3600' : a.lifetime === 'long' ? '; Max-Age=2592000' : '';
+    header.textContent = 'Set-Cookie: session=9f3a1c...' + (a.httponly ? '; HttpOnly' : '') + (a.secure ? '; Secure' : '') + (a.samesite ? '; SameSite=' + a.samesite : '') + life + '; Path=/';
+  };
+  draw();
+  const chk = (label, key) => h('label', { class: 'chk' }, h('input', { type: 'checkbox', onchange: e => { a[key] = e.target.checked; draw(); } }), label);
+  const ss = selectEl([['', '(not set)'], ['Strict', 'Strict'], ['Lax', 'Lax'], ['None', 'None']], '', { onchange: e => { a.samesite = e.target.value; draw(); } });
+  const lt = selectEl([['session', 'Session (until browser closes)'], ['short', 'Short (1 hour)'], ['long', 'Long (30 days)']], 'session', { onchange: e => { a.lifetime = e.target.value; draw(); } });
+  const names = { httponly: 'HttpOnly', secure: 'Secure', samesite: 'SameSite', lifetime: 'Lifetime' };
+  return h('div', null, h('div', { class: 'scenario' }, h('b', null, 'Scenario: '), c.payload.scenario),
+    h('div', { class: 'cookie-form' }, chk('HttpOnly', 'httponly'), chk('Secure', 'secure'), field('SameSite', ss), field('Lifetime', lt)), header,
+    h('div', { class: 'btn-row' }, h('button', { class: 'btn sm', onclick: () => {
+      const g = submitAnswer(c, a);
+      const f = g.detail.fields || {};
+      showFeedback(out, g, h('ul', { class: 'fieldres' }, Object.keys(f).map(k => h('li', { class: f[k] ? 'ok' : 'bad' }, (f[k] ? '✔ ' : '✖ ') + names[k] + (f[k] ? ' is right' : ' needs another look')))));
+    } }, 'Check my cookie')), out);
+}
+
+/* ---- CSRF lab ---- */
+function csrfBody(c) {
+  const getState = () => { db.labs[user.id] = db.labs[user.id] || {}; if (!db.labs[user.id].csrf) db.labs[user.id].csrf = CsrfLab.fresh(); return db.labs[user.id].csrf; };
+  const root = h('div', { class: 'csrf-lab' }), out = h('div', { class: 'out' });
+  let amount = 50;
+  const draw = () => {
+    const s = getState();
+    const secure = s.mode === 'secure';
+    const sendLegit = () => { const r = CsrfLab.transfer(s, amount, s.token); saveDb(); draw(); toast(r.message, !r.ok); };
+    const forge = () => { const r = CsrfLab.forge(s, 300); saveDb(); draw(); toast(r.message, !r.ok); };
+    const step = (ok, text) => h('li', { class: ok ? 'ok' : '' }, (ok ? '✅ ' : '⬜ ') + text);
+    root.replaceChildren(
+      h('div', { class: 'seg' },
+        h('button', { class: 'btn sm ' + (secure ? 'ghost' : ''), onclick: () => { CsrfLab.setMode(s, 'vulnerable'); saveDb(); draw(); } }, '🔓 Vulnerable bank'),
+        h('button', { class: 'btn sm ' + (secure ? '' : 'ghost'), onclick: () => { CsrfLab.setMode(s, 'secure'); saveDb(); draw(); } }, '🔒 Secure bank (CSRF token)')),
+      h('div', { class: 'lab-grid' },
+        h('div', { class: 'site' }, h('div', { class: 'site-bar' }, '🏦 campusbank.example (you are logged in)'),
+          h('div', { class: 'site-body' }, h('div', { class: 'big-num' }, '₱' + s.balance), h('div', { class: 'hint' }, 'Your fake balance · Attacker has ₱' + s.attacker),
+            secure ? h('div', { class: 'tokenbox' }, 'Hidden form field: ', h('code', null, '_token=' + s.token.slice(0, 8) + '…')) : h('div', { class: 'tokenbox warn' }, 'This form has NO token.'),
+            h('label', null, 'Amount to send to Campus Bookstore'), h('input', { type: 'number', min: 1, max: 500, value: amount, oninput: e => { amount = parseInt(e.target.value, 10) || 0; } }),
+            h('div', { class: 'btn-row' }, h('button', { class: 'btn sm', onclick: sendLegit }, 'Send my transfer')))),
+        h('div', { class: 'site evil' }, h('div', { class: 'site-bar' }, '😈 evil.example/free-prize (another tab)'),
+          h('div', { class: 'site-body' }, h('h4', null, '🎁 You won a prize!'), h('p', { class: 'hint' }, 'The page secretly contains this form, which submits itself to the bank:'),
+            h('pre', { class: 'codebox' }, '<form action="https://campusbank.example/transfer" method="POST">\n  <input name="to" value="attacker">\n  <input name="amount" value="300">\n</form>\n<script>form.submit()<\/script>'),
+            h('div', { class: 'btn-row' }, h('button', { class: 'btn danger sm', onclick: forge }, '🎁 Claim prize (open evil page)'))))),
+      h('div', { class: 'reqbox' }, h('b', null, 'What the bank receives from the forged request:'), h('pre', { class: 'codebox' }, 'POST /transfer\nCookie: session=9f3a1c...   <- the browser adds this automatically\nto=attacker&amount=300' + (secure ? '\n(no _token field: the attacker cannot read it)' : ''))),
+      h('div', { class: 'cols2' },
+        h('div', null, h('b', null, 'Mission checklist'), h('ul', { class: 'steps' }, step(s.flags.attack, '1. Forged transfer succeeds on the vulnerable bank'), step(s.flags.defense, '2. Same attack is blocked on the secure bank'), step(s.flags.legit, '3. Your own transfer works on the secure bank (token included)'))),
+        h('div', null, h('b', null, 'Request log'), h('ul', { class: 'list logl' }, s.log.map(l => h('li', { class: l.ok ? '' : 'bad' }, h('span', { class: 'who' }, l.who), h('span', null, l.text))), s.log.length ? null : h('li', { class: 'empty' }, 'No requests yet.')))),
+      h('div', { class: 'btn-row' },
+        h('button', { class: 'btn ghost sm', onclick: () => { const f = s.flags; const fresh = CsrfLab.fresh(); fresh.flags = f; db.labs[user.id].csrf = fresh; saveDb(); draw(); } }, '↺ Reset balances'),
+        h('button', { class: 'btn sm', disabled: !CsrfLab.complete(s) && !(db.results[user.id] || {})[c.id], onclick: () => { const g = submitAnswer(c, {}); showFeedback(out, g); } }, '🏁 Claim points')));
+  };
+  draw();
+  return h('div', null, root, out);
+}
+
+/* ---- cookie flag simulator + session fixation demo (shown on the Cookie Lab page) ---- */
+function cookieSimulator() {
+  const s = { httponly: false, secure: false, samesite: '', https: true };
+  const res = h('div', { class: 'simres' }), header = h('pre', { class: 'codebox' });
+  const draw = () => {
+    header.textContent = 'Set-Cookie: sessionid=9f3a1c7e...' + (s.httponly ? '; HttpOnly' : '') + (s.secure ? '; Secure' : '') + (s.samesite ? '; SameSite=' + s.samesite : '') + '; Path=/';
+    const row = (title, ok, text) => h('div', { class: 'simrow ' + (ok ? 'ok' : 'bad') }, h('b', null, (ok ? '🛡️ Protected — ' : '💥 Exposed — ') + title), h('div', null, text));
+    res.replaceChildren(
+      row('Script injected by XSS runs document.cookie', s.httponly, s.httponly ? 'HttpOnly hides the cookie from scripts. It returns an empty string.' : 'The attacker script reads "sessionid=9f3a1c7e..." and sends it away: session hijacked.'),
+      row('Attacker watches public Wi‑Fi', s.https && s.secure, !s.https ? 'The site uses plain HTTP, so the cookie travels in readable text. Use HTTPS everywhere.' : s.secure ? 'Secure cookies are only ever sent over encrypted HTTPS connections.' : 'The site uses HTTPS but the cookie lacks Secure, so it can leak if the user visits an http:// version of the site.'),
+      row('Malicious site makes your browser send a cross-site POST', s.samesite === 'Strict' || s.samesite === 'Lax', s.samesite === 'Strict' || s.samesite === 'Lax' ? 'SameSite stops the browser attaching the cookie to this cross-site request, so the forged request is not authenticated.' : s.samesite === 'None' && !s.secure ? 'Browsers reject SameSite=None unless Secure is also set. Without SameSite protection the cookie is attached and CSRF is possible (unless a token blocks it).' : 'The cookie is attached to the forged request. Only a CSRF token can stop it now.'));
+  };
+  const chk = (label, key) => h('label', { class: 'chk' }, h('input', { type: 'checkbox', checked: s[key], onchange: e => { s[key] = e.target.checked; draw(); } }), label);
+  draw();
+  return card('🧪 Cookie flag simulator', h('p', { class: 'hint' }, 'Switch protections on and off and watch which attacks succeed.'),
+    h('div', { class: 'cookie-form' }, chk('Site uses HTTPS', 'https'), chk('HttpOnly', 'httponly'), chk('Secure', 'secure'), field('SameSite', selectEl([['', '(not set)'], ['Strict', 'Strict'], ['Lax', 'Lax'], ['None', 'None']], '', { onchange: e => { s.samesite = e.target.value; draw(); } }))), header, res,
+    h('p', { class: 'hint' }, 'Cookies visible to this page right now (document.cookie): ', h('code', null, (() => { try { return document.cookie || '(none)'; } catch (e) { return '(unavailable)'; } })())));
+}
+function fixationDemo() {
+  let regen = false;
+  const out = h('div', { class: 'simres' });
+  const run = () => {
+    const known = 'ABC123';
+    const after = regen ? 'F7Q9X2 (new random ID)' : known;
+    const hijacked = !regen;
+    out.replaceChildren(
+      h('ol', { class: 'steps2' }, h('li', null, 'Attacker visits the site and gets session ID ' + known + ', then tricks you into using it (e.g. via a crafted link).'), h('li', null, 'You log in with your real password while using session ID ' + known + '.'), h('li', null, 'The server ' + (regen ? 'ISSUES A NEW session ID after login: ' : 'KEEPS the same session ID after login: ') + after + '.'), h('li', null, 'The attacker now tries session ID ' + known + '…')),
+      h('div', { class: 'simrow ' + (hijacked ? 'bad' : 'ok') }, h('b', null, hijacked ? '💥 Attacker is logged in as you.' : '🛡️ Attack fails: the old ID is no longer valid.'), h('div', null, hijacked ? 'Fix: always regenerate the session ID on login.' : 'Regenerating the ID at login (and logout) defeats session fixation.')));
+  };
+  return card('🔗 Session fixation demo', h('label', { class: 'chk' }, h('input', { type: 'checkbox', onchange: e => { regen = e.target.checked; run(); } }), 'Server regenerates the session ID at login'), h('div', { class: 'btn-row' }, h('button', { class: 'btn sm', onclick: run }, '▶ Run simulation')), out);
+}
+
+/* ---------------- quizzes ---------------- */
+const Quiz = {
+  submit(uid, m, answers) {
+    const qs = publishedChallenges(m);
+    let score = 0, earned = 0;
+    const per = [], saved = {};
+    const fresh = [];
+    for (const q of qs) {
+      const idx = Number.isInteger(answers[q.id]) ? answers[q.id] : -1;
+      const g = grade(uid, q, { index: idx });
+      score += g.correct ? 1 : 0;
+      earned += g.earned;
+      fresh.push(...g.newAch);
+      saved[q.id] = idx;
+      per.push({ id: q.id, correct: g.correct, correctIndex: g.detail.correctIndex, explanation: g.explanation });
+    }
+    db.quizAttempts.push({ id: nid(), uid, moduleId: m.id, score, total: qs.length, answers: saved, at: Date.now() });
+    logAct('quiz.submitted', { module: m.slug, score, total: qs.length }, uid);
+    fresh.push(...evaluateAch(uid));
+    saveDb();
+    return { score, total: qs.length, earned, per, newAch: fresh };
+  }
+};
+function quizView(m, qs) {
+  if (!qs.length) return card(null, note('No questions have been published for this quiz yet.'));
+  const wrap = h('div', null);
+  const history = () => {
+    const at = db.quizAttempts.filter(a => a.uid === user.id && a.moduleId === m.id).slice(-8).reverse();
+    return card('🗂️ Your saved attempts', at.length ? table(['Date', 'Score', 'Percent'], at.map(a => [fmtDate(a.at), `${a.score}/${a.total}`, Math.round(a.score * 100 / a.total) + '%'])) : note('No attempts yet.'));
+  };
+  const build = () => {
+    wrap.replaceChildren();
+    const picks = {};
+    const blocks = qs.map((q, qi) => {
+      const labels = q.payload.options.map((o, i) => h('label', { class: 'opt' }, h('input', { type: 'radio', name: 'quiz' + q.id, onchange: () => { picks[q.id] = i; } }), h('span', null, o)));
+      const fb = h('div', { class: 'out' });
+      return { q, labels, fb, el: h('div', { class: 'card chal' }, h('div', { class: 'chal-head' }, h('h3', null, `${qi + 1}. ${q.title}`), h('span', { class: 'pill' }, q.points + ' pts')), h('div', { class: 'opts' }, labels), fb) };
+    });
+    const summary = h('div', null);
+    blocks.forEach(b => wrap.append(b.el));
+    wrap.append(h('div', { class: 'btn-row' }, h('button', { class: 'btn', onclick: () => {
+      const missing = qs.filter(q => picks[q.id] === undefined).length;
+      if (missing) return toast(`Please answer all questions (${missing} left).`, true);
+      const r = Quiz.submit(user.id, m, picks);
+      refreshChrome(); notifyAch(r.newAch); if (gradedHook) gradedHook(qs[0], r);
+      blocks.forEach(b => {
+        const p = r.per.find(x => x.id === b.q.id);
+        b.labels.forEach((l, i) => { l.classList.remove('right', 'wrong'); const inp = l.querySelector('input'); inp.disabled = true; if (i === p.correctIndex) l.classList.add('right'); else if (i === picks[b.q.id]) l.classList.add('wrong'); });
+        b.fb.replaceChildren(h('div', { class: 'feedback ' + (p.correct ? 'good' : 'bad') }, p.correct ? '✅ Correct' : '❌ Incorrect'), p.explanation ? h('p', { class: 'expl' }, p.explanation) : null);
+      });
+      const pc = Math.round(r.score * 100 / r.total);
+      summary.replaceChildren(card('🎓 Your result', h('div', { class: 'big-score grad' }, `${r.score}/${r.total}`), h('p', null, `${pc}% — ${pc === 100 ? 'Perfect!' : pc >= 70 ? 'Great job!' : 'Keep practising.'} ${r.earned ? `You earned ${r.earned} new points.` : 'No new points this time (points are earned once per question).'}`), h('div', { class: 'btn-row' }, h('button', { class: 'btn', onclick: () => { build(); window.scrollTo(0, 0); } }, '↺ Retake quiz'))));
+      histBox.replaceChildren(history());
+      summary.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    } }, 'Submit quiz')));
+    wrap.append(summary);
+  };
+  const histBox = h('div', null, history());
+  build();
+  return h('div', null, wrap, histBox);
+}
+
+/* ---------------- leaderboard / achievements / notifications / profile ---------------- */
+function leaderboardView() {
+  const b = board();
+  const mine = b.findIndex(r => r.id === user.id);
+  return h('div', null, h('h2', null, '🏆 Leaderboard'), h('p', { class: 'muted' }, 'Ranked by points earned from completed challenges.'),
+    mine >= 0 ? card(null, h('div', { class: 'me-rank' }, h('span', { class: 'big-num grad' }, '#' + (mine + 1)), h('span', null, ` of ${b.length} students · ${b[mine].points} points`))) : null,
+    card(null, h('ul', { class: 'list board' }, b.slice(0, 50).map((r, i) => h('li', { class: r.id === user.id ? 'mine' : '' },
+      h('span', { class: 'rank ' + (i < 3 ? 'r' + (i + 1) : '') }, String(i + 1)),
+      h('div', { class: 'who2' }, h('b', { class: r.id === user.id ? 'me' : '' }, r.name + (r.id === user.id ? ' (you)' : '')), h('div', { class: 'hint' }, r.course || '')),
+      h('span', { class: 'time pts' }, r.points + ' pts'))), b.length ? null : h('li', { class: 'empty' }, 'No students yet.'))));
+}
+function achievementsView() {
+  const mine = new Map(db.userAch.filter(x => x.uid === user.id).map(x => [x.aid, x]));
+  const list = db.achievements.filter(a => a.active);
+  return h('div', null, h('h2', null, '🎖️ Achievements'), h('p', { class: 'muted' }, `${mine.size} of ${list.length} unlocked. They are awarded automatically when you meet the goal.`),
+    h('div', { class: 'grid ach-grid' }, list.map(a => { const e = mine.get(a.id); return h('div', { class: 'card ach ' + (e ? 'earned' : 'locked') }, h('div', { class: 'ach-ico' }, a.icon), h('h4', null, a.name), h('p', null, a.description), h('span', { class: 'tag ' + (e ? 'done' : '') }, e ? 'Unlocked ' + fmtDate(e.at) : '🔒 Locked')); })));
+}
+function notificationsView() {
+  const items = db.notifs.filter(n => n.uid === user.id).slice(0, 50);
+  return h('div', null, h('h2', null, '🔔 Notifications'),
+    h('div', { class: 'btn-row' }, h('button', { class: 'btn ghost sm', onclick: () => { db.notifs.forEach(n => { if (n.uid === user.id) n.read = true; }); saveDb(); rerender(); } }, 'Mark all as read')),
+    card(null, h('ul', { class: 'list notif' }, items.map(n => h('li', { class: n.read ? '' : 'unread', onclick: () => { n.read = true; saveDb(); rerender(); } }, h('div', null, h('b', null, n.title), n.body ? h('div', { class: 'hint' }, n.body) : null), h('span', { class: 'time' }, ago(n.at)))), items.length ? null : h('li', { class: 'empty' }, 'No notifications yet.'))));
+}
+function profileView() {
+  const name = h('input', { type: 'text', value: user.name, maxlength: 60 });
+  const course = selectEl([['', '—'], ...COURSES], user.course);
+  const e1 = h('div', { class: 'alert', role: 'alert' }), e2 = h('div', { class: 'alert', role: 'alert' });
+  const say = (el, t, ok) => { el.textContent = t; el.className = 'alert show ' + (ok ? 'ok' : 'err'); };
+  const cur = h('input', { type: 'password', maxlength: 64, autocomplete: 'current-password' }), np = h('input', { type: 'password', maxlength: 64, autocomplete: 'new-password' }), cf = h('input', { type: 'password', maxlength: 64, autocomplete: 'new-password' });
+  const stats = user.role === 'student' ? (() => {
+    const q = db.quizAttempts.filter(a => a.uid === user.id), best = q.length ? Math.max(...q.map(a => Math.round(a.score * 100 / a.total))) : null;
+    const attempts = Object.values(db.results[user.id] || {}).reduce((s, r) => s + r.attempts, 0);
+    return card('📊 My progress', h('div', { class: 'kv' }, h('span', null, 'Points'), h('b', null, String(total(user.id))), h('span', null, 'Rank'), h('b', null, rankOf(user.id) ? '#' + rankOf(user.id) : '—'), h('span', null, 'Challenges completed'), h('b', null, String(completedCount(user.id))), h('span', null, 'Total attempts'), h('b', null, String(attempts)), h('span', null, 'Quizzes taken'), h('b', null, String(q.length)), h('span', null, 'Best quiz'), h('b', null, best === null ? '—' : best + '%'), h('span', null, 'Achievements'), h('b', null, String(db.userAch.filter(x => x.uid === user.id).length)), h('span', null, 'Member since'), h('b', null, fmtDate(user.created)), h('span', null, 'Last login'), h('b', null, fmtDate(user.lastLogin))));
+  })() : null;
+  return h('div', null, h('h2', null, '👤 My profile'),
+    h('div', { class: 'grid cols2g' },
+      card('Account details', h('div', { class: 'kv' }, h('span', null, 'Email'), h('b', null, user.email), h('span', null, 'Student ID'), h('b', null, user.sid || '—'), h('span', null, 'Role'), h('b', null, user.role)),
+        h('form', { novalidate: true, onsubmit: e => { e.preventDefault(); const r = Me.updateProfile(user, name.value, course.value); if (!r.ok) return say(e1, r.error); say(e1, 'Profile updated.', true); rerender(); } },
+          field('Full name', name), user.role === 'student' ? field('Course', course) : null, e1, h('button', { class: 'btn sm', type: 'submit' }, 'Save profile'))),
+      card('Change password', h('form', { novalidate: true, onsubmit: async e => {
+        e.preventDefault();
+        const r = await Me.changePassword(user, cur.value, np.value, cf.value);
+        if (!r.ok) return say(e2, r.error);
+        cur.value = np.value = cf.value = ''; say(e2, 'Password changed.', true);
+      } }, field('Current password', cur), field('New password', np), strengthMeter(np), field('Confirm new password', cf), e2, h('button', { class: 'btn sm', type: 'submit' }, 'Update password'))),
+      stats));
+}
+
+/* ================================================================
+   Admin – permission-guarded API (every call re-checks the role)
+   ================================================================ */
+
+function guard() {
+  const u = currentUser();
+  if (!u || u.role !== 'admin' || !u.active) {
+    logAct('security.admin_denied', {});
+    saveDb();
+    throw new Error('Forbidden: administrator access required.');
+  }
+  return u;
+}
+const activeAdmins = () => db.users.filter(u => u.role === 'admin' && u.active).length;
+const userName = id => { const u = db.users.find(x => x.id === id); return u ? u.name : '(deleted user)'; };
+const ok = (extra = {}) => ({ ok: true, ...extra });
+const fail = error => ({ ok: false, error });
+const RESET_ALPHABET = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+
+const Admin = {
+  /* ---------- statistics ---------- */
+  stats() {
+    guard();
+    const students = db.users.filter(u => u.role === 'student');
+    const week = Date.now() - 7 * 864e5;
+    const q = db.quizAttempts.filter(a => a.total > 0);
+    let completions = 0;
+    for (const uid in db.results) for (const cid in db.results[uid]) if (db.results[uid][cid].done) completions++;
+    return {
+      students: students.length, activeStudents: students.filter(u => u.active).length,
+      active7d: students.filter(u => u.lastLogin && u.lastLogin >= week).length, new7d: students.filter(u => u.created >= week).length,
+      modules: db.modules.filter(m => m.published).length, challenges: db.challenges.filter(c => c.published).length,
+      completions, quizAttempts: db.quizAttempts.length, avgQuiz: q.length ? Math.round(q.reduce((s, a) => s + a.score * 100 / a.total, 0) / q.length) : null,
+      registrations: Array.from({ length: 14 }, (_, i) => {
+        const d = new Date(); d.setHours(0, 0, 0, 0); d.setDate(d.getDate() - (13 - i));
+        const from = d.getTime(), to = from + 864e5;
+        return { label: d.toLocaleDateString([], { month: 'short', day: 'numeric' }), count: students.filter(u => u.created >= from && u.created < to).length };
+      }),
+      recent: db.logs.slice(0, 10)
+    };
+  },
+  reports() {
+    guard();
+    const students = db.users.filter(u => u.role === 'student');
+    const modules = db.modules.slice().sort((a, b) => a.position - b.position).map(m => {
+      const cs = publishedChallenges(m);
+      let started = 0, completed = 0;
+      for (const s of students) {
+        const res = db.results[s.id] || {};
+        const touched = cs.filter(c => res[c.id]).length, done = cs.filter(c => res[c.id] && res[c.id].done).length;
+        if (touched) started++;
+        if (cs.length && done >= cs.length) completed++;
+      }
+      return { title: m.title, icon: m.icon, published: m.published, challenges: cs.length, started, completed };
+    });
+    const challenges = db.challenges.map(c => {
+      let attempted = 0, solved = 0, att = 0;
+      for (const s of students) { const r = (db.results[s.id] || {})[c.id]; if (r) { attempted++; att += r.attempts; if (r.done) solved++; } }
+      const m = db.modules.find(x => x.id === c.moduleId);
+      return { title: c.title, module: m ? m.title : '?', attempted, solved, rate: attempted ? Math.round(solved * 100 / attempted) : null, avg: attempted ? Math.round(att * 10 / attempted) / 10 : 0 };
+    });
+    const quizzes = db.modules.filter(m => m.type === 'quiz').map(m => {
+      const a = db.quizAttempts.filter(x => x.moduleId === m.id && x.total > 0);
+      return { title: m.title, attempts: a.length, avg: a.length ? Math.round(a.reduce((s, x) => s + x.score * 100 / x.total, 0) / a.length) : null, best: a.length ? Math.round(Math.max(...a.map(x => x.score * 100 / x.total))) : null };
+    });
+    return { modules, challenges, quizzes };
+  },
+  studentsCsv() {
+    guard();
+    logAct('admin.export_students', {});
+    saveDb();
+    const safe = v => { v = v == null ? '' : String(v); if (v && '=+-@\t\r'.includes(v[0])) v = "'" + v; return '"' + v.replace(/"/g, '""') + '"'; };
+    const rows = [['student_id', 'name', 'email', 'course', 'status', 'points', 'challenges_completed', 'last_login', 'registered']];
+    db.users.filter(u => u.role === 'student').sort((a, b) => a.name.localeCompare(b.name)).forEach(u => rows.push([u.sid, u.name, u.email, u.course, u.active ? 'active' : 'disabled', total(u.id), completedCount(u.id), u.lastLogin ? new Date(u.lastLogin).toISOString() : '', new Date(u.created).toISOString()]));
+    return rows.map(r => r.map(safe).join(',')).join('\r\n');
+  },
+  activity(f, page) {
+    guard();
+    let rows = db.logs;
+    if (f.action) rows = rows.filter(l => l.action.startsWith(f.action));
+    if (f.search) { const s = f.search.toLowerCase(); rows = rows.filter(l => { const u = db.users.find(x => x.id === l.uid); return u && (u.name.toLowerCase().includes(s) || u.email.toLowerCase().includes(s)); }); }
+    const pages = Math.max(1, Math.ceil(rows.length / 25));
+    page = Math.min(Math.max(1, page), pages);
+    return { rows: rows.slice((page - 1) * 25, page * 25), page, pages, count: rows.length };
+  },
+
+  /* ---------- users ---------- */
+  users(f, page) {
+    guard();
+    let rows = db.users.map(u => ({ u, points: u.role === 'student' ? total(u.id) : 0, completed: u.role === 'student' ? completedCount(u.id) : 0 }));
+    if (f.search) { const s = f.search.toLowerCase(); rows = rows.filter(r => r.u.name.toLowerCase().includes(s) || r.u.email.includes(s) || r.u.sid.toLowerCase().includes(s)); }
+    if (f.role) rows = rows.filter(r => r.u.role === f.role);
+    if (f.status) rows = rows.filter(r => (f.status === 'active') === r.u.active);
+    if (f.course) rows = rows.filter(r => r.u.course === f.course);
+    const sorters = { points: (a, b) => b.points - a.points, recent: (a, b) => (b.u.lastLogin || 0) - (a.u.lastLogin || 0), newest: (a, b) => b.u.id - a.u.id, name: (a, b) => a.u.name.localeCompare(b.u.name) };
+    rows.sort(sorters[f.sort] || sorters.name);
+    const pages = Math.max(1, Math.ceil(rows.length / 15));
+    page = Math.min(Math.max(1, page), pages);
+    return { rows: rows.slice((page - 1) * 15, page * 15), page, pages, count: rows.length };
+  },
+  async createUser(f) {
+    guard();
+    const role = f.role === 'admin' ? 'admin' : 'student';
+    const v = validateProfile({ ...f, course: f.course || '' }, { needSid: false });
+    if (v.error) return fail(v.error);
+    const pe = pwProblem(f.password);
+    if (pe) return fail(pe);
+    const u = await createUser({ ...v, role, password: f.password });
+    logAct('admin.user_created', { target: u.id, role });
+    saveDb();
+    return ok({ toast: 'Account created.' });
+  },
+  updateUser(id, f) {
+    const me = guard();
+    const u = db.users.find(x => x.id === id);
+    if (!u) return fail('User not found.');
+    const role = f.role === 'admin' ? 'admin' : 'student';
+    const v = validateProfile({ ...f, course: f.course || '' }, { needSid: false, ignoreId: id });
+    if (v.error) return fail(v.error);
+    const demoting = u.role === 'admin' && role !== 'admin', disabling = u.active && !f.active;
+    if (u.id === me.id && (demoting || disabling)) return fail('You cannot remove your own administrator access or disable your own account.');
+    if (u.role === 'admin' && u.active && (demoting || disabling) && activeAdmins() <= 1) return fail('At least one active administrator must remain.');
+    Object.assign(u, { name: v.name, email: v.email, sid: v.sid, course: v.course, role, active: !!f.active });
+    logAct('admin.user_updated', { target: u.id, role: u.role, active: u.active });
+    saveDb();
+    return ok({ toast: 'Account updated.' });
+  },
+  deleteUser(id) {
+    const me = guard();
+    const u = db.users.find(x => x.id === id);
+    if (!u) return fail('User not found.');
+    if (u.id === me.id) return fail('You cannot delete your own account.');
+    if (u.role === 'admin' && u.active && activeAdmins() <= 1) return fail('At least one active administrator must remain.');
+    db.users = db.users.filter(x => x.id !== id);
+    delete db.results[id]; delete db.labs[id]; delete db.resets[u.email];
+    db.quizAttempts = db.quizAttempts.filter(a => a.uid !== id);
+    db.userAch = db.userAch.filter(a => a.uid !== id);
+    db.adjustments = db.adjustments.filter(a => a.uid !== id);
+    db.notifs = db.notifs.filter(n => n.uid !== id);
+    logAct('admin.user_deleted', { target: id, email: u.email });
+    saveDb();
+    return ok({ toast: 'Account deleted.' });
+  },
+  async resetCode(id) {
+    const me = guard();
+    const u = db.users.find(x => x.id === id);
+    if (!u) return fail('User not found.');
+    const bytes = new Uint8Array(8);
+    crypto.getRandomValues ? crypto.getRandomValues(bytes) : bytes.forEach((_, i) => { bytes[i] = Math.floor(Math.random() * 256); });
+    const code = [...bytes].map(b => RESET_ALPHABET[b % RESET_ALPHABET.length]).join('');
+    const salt = rid(16);
+    db.resets[u.email] = { salt, hash: await hashSecret(code, salt), exp: Date.now() + 30 * 60000, tries: 0, by: me.id };
+    logAct('admin.reset_code_created', { target: u.id });
+    saveDb();
+    return ok({ code });
+  },
+  resetProgress(id) {
+    guard();
+    const u = db.users.find(x => x.id === id);
+    if (!u) return fail('User not found.');
+    delete db.results[id]; delete db.labs[id];
+    db.quizAttempts = db.quizAttempts.filter(a => a.uid !== id);
+    db.userAch = db.userAch.filter(a => a.uid !== id);
+    notify(id, 'Progress reset', 'Your instructor reset your learning progress.');
+    logAct('admin.progress_reset', { target: id });
+    saveDb();
+    return ok({ toast: 'Progress reset.' });
+  },
+  adjustPoints(id, points, reason) {
+    guard();
+    const u = db.users.find(x => x.id === id);
+    if (!u || u.role !== 'student') return fail('Points can only be adjusted for students.');
+    points = Number(points);
+    reason = String(reason || '').trim();
+    if (!Number.isInteger(points) || points === 0 || Math.abs(points) > 1000) return fail('Enter a whole number between -1000 and 1000 (not 0).');
+    if (reason.length < 3 || reason.length > 200) return fail('Give a reason (3–200 characters).');
+    if (total(id) + points < 0) return fail('A student cannot go below 0 points.');
+    db.adjustments.push({ id: nid(), uid: id, adminId: currentUser().id, points, reason, at: Date.now() });
+    notify(id, (points > 0 ? '+' : '') + points + ' points', reason);
+    logAct('admin.points_adjusted', { target: id, points });
+    evaluateAch(id);
+    saveDb();
+    return ok({ toast: 'Points adjusted.' });
+  },
+  async loadSamples() {
+    guard();
+    if (db.users.some(u => u.sample)) return fail('Sample students are already loaded.');
+    const names = ['Maria Santos', 'Juan Dela Cruz', 'Ana Reyes', 'Carlo Mendoza', 'Bea Lim', 'Paolo Garcia', 'Lea Navarro', 'Miguel Torres'];
+    const pts = [320, 270, 210, 150, 90, 60, 30, 10];
+    for (let i = 0; i < names.length; i++) {
+      const u = await createUser({ name: names[i], email: `sample${i + 1}@sample.local`, sid: `SAMPLE-${100 + i}`, course: COURSES[i % 4], sample: true });
+      u.lastLogin = Date.now() - i * 3600e3 * 7;
+      db.adjustments.push({ id: nid(), uid: u.id, adminId: null, points: pts[i], reason: 'Sample data', at: Date.now() });
+    }
+    logAct('admin.samples_loaded', {});
+    saveDb();
+    return ok({ toast: 'Sample students added (they cannot log in).' });
+  },
+  removeSamples() {
+    guard();
+    const ids = new Set(db.users.filter(u => u.sample).map(u => u.id));
+    if (!ids.size) return fail('There are no sample students.');
+    db.users = db.users.filter(u => !ids.has(u.id));
+    db.adjustments = db.adjustments.filter(a => !ids.has(a.uid));
+    db.notifs = db.notifs.filter(n => !ids.has(n.uid));
+    db.userAch = db.userAch.filter(a => !ids.has(a.uid));
+    ids.forEach(i => { delete db.results[i]; delete db.labs[i]; });
+    logAct('admin.samples_removed', {});
+    saveDb();
+    return ok({ toast: 'Sample students removed.' });
+  },
+
+  /* ---------- achievements ---------- */
+  achievementData(f, ignoreId) {
+    const slug = String(f.slug || '').trim();
+    const crit = ['first_login', 'module_complete', 'points_at_least', 'challenges_at_least', 'perfect_quiz', 'all_modules', 'manual'];
+    if (!SLUG_RE.test(slug)) return { error: 'Slug: 2–60 lowercase letters, numbers or dashes.' };
+    if (db.achievements.some(a => a.slug === slug && a.id !== ignoreId)) return { error: 'That slug is already used.' };
+    const name = String(f.name || '').trim();
+    if (!name || name.length > 80) return { error: 'Name is required (max 80 characters).' };
+    const icon = String(f.icon || '').trim();
+    if (!icon || icon.length > 16) return { error: 'Icon is required (an emoji, max 16 characters).' };
+    if (!crit.includes(f.criteria)) return { error: 'Choose a criteria.' };
+    const description = String(f.description || '').trim().slice(0, 200);
+    let value = null;
+    if (['points_at_least', 'challenges_at_least'].includes(f.criteria)) { value = Number(f.value); if (!Number.isInteger(value) || value < 1 || value > 1000000) return { error: 'This criteria needs a whole-number value (1 or more).' }; }
+    let moduleId = null;
+    if (f.moduleId) { moduleId = Number(f.moduleId); if (!db.modules.some(m => m.id === moduleId)) return { error: 'Choose a valid module.' }; }
+    if (f.criteria === 'module_complete' && !moduleId) return { error: '"Module complete" needs a module.' };
+    return { v: { slug, name, icon, description, criteria: f.criteria, value, moduleId, active: !!f.active } };
+  },
+  createAchievement(f) {
+    guard();
+    const r = this.achievementData(f, null);
+    if (r.error) return fail(r.error);
+    const a = { id: nid(), ...r.v };
+    db.achievements.push(a);
+    logAct('admin.achievement_created', { id: a.id });
+    saveDb();
+    return ok({ toast: 'Achievement created.' });
+  },
+  updateAchievement(id, f) {
+    guard();
+    const a = db.achievements.find(x => x.id === id);
+    if (!a) return fail('Not found.');
+    const r = this.achievementData(f, id);
+    if (r.error) return fail(r.error);
+    Object.assign(a, r.v);
+    logAct('admin.achievement_updated', { id });
+    saveDb();
+    return ok({ toast: 'Achievement updated.' });
+  },
+  deleteAchievement(id) {
+    guard();
+    db.achievements = db.achievements.filter(a => a.id !== id);
+    db.userAch = db.userAch.filter(x => x.aid !== id);
+    logAct('admin.achievement_deleted', { id });
+    saveDb();
+    return ok({ toast: 'Achievement deleted.' });
+  },
+  grantAchievement(aid, uid) {
+    const me = guard();
+    const a = db.achievements.find(x => x.id === aid), u = db.users.find(x => x.id === uid && x.role === 'student');
+    if (!a || !u) return fail('Choose a student.');
+    const granted = awardAch(uid, a, me.id);
+    saveDb();
+    return granted ? ok({ toast: 'Achievement granted.' }) : fail('The student already has this achievement.');
+  },
+  revokeAchievement(aid, uid) {
+    guard();
+    db.userAch = db.userAch.filter(x => !(x.aid === aid && x.uid === uid));
+    logAct('admin.achievement_revoked', { id: aid, target: uid });
+    saveDb();
+    return ok({ toast: 'Achievement revoked.' });
+  },
+
+  /* ---------- modules & challenges ---------- */
+  moduleData(f, ignoreId) {
+    const slug = String(f.slug || '').trim();
+    if (!SLUG_RE.test(slug)) return { error: 'Slug: 2–60 lowercase letters, numbers or dashes.' };
+    if (db.modules.some(m => m.slug === slug && m.id !== ignoreId)) return { error: 'That slug is already used.' };
+    const title = String(f.title || '').trim();
+    if (!title || title.length > 120) return { error: 'Title is required (max 120 characters).' };
+    const icon = String(f.icon || '').trim();
+    if (!icon || icon.length > 16) return { error: 'Icon is required (an emoji).' };
+    if (!['lab', 'quiz'].includes(f.type)) return { error: 'Choose a type.' };
+    const position = Number(f.position);
+    if (!Number.isInteger(position) || position < 0 || position > 1000) return { error: 'Position must be 0–1000.' };
+    const lesson = String(f.lesson || '');
+    if (lesson.length > 60000) return { error: 'Lesson is too long.' };
+    return { v: { slug, title, icon, summary: String(f.summary || '').trim().slice(0, 300), lesson, type: f.type, position, published: !!f.published } };
+  },
+  createModule(f) {
+    guard();
+    const r = this.moduleData(f, null);
+    if (r.error) return fail(r.error);
+    const m = { id: nid(), ...r.v };
+    db.modules.push(m);
+    logAct('admin.module_created', { id: m.id });
+    saveDb();
+    return ok({ toast: 'Module created.', id: m.id });
+  },
+  updateModule(id, f) {
+    guard();
+    const m = db.modules.find(x => x.id === id);
+    if (!m) return fail('Not found.');
+    const r = this.moduleData(f, id);
+    if (r.error) return fail(r.error);
+    if (r.v.type === 'quiz' && db.challenges.some(c => c.moduleId === id && c.type !== 'mcq')) return fail('A quiz can only contain multiple-choice questions. Remove the other challenge types first.');
+    Object.assign(m, r.v);
+    logAct('admin.module_updated', { id, published: m.published });
+    saveDb();
+    return ok({ toast: 'Module saved.' });
+  },
+  setModulePublished(id, published) {
+    guard();
+    const m = db.modules.find(x => x.id === id);
+    if (!m) return fail('Not found.');
+    m.published = !!published;
+    logAct('admin.module_updated', { id, published: m.published });
+    saveDb();
+    return ok({ toast: published ? 'Module published.' : 'Module unpublished.' });
+  },
+  deleteModule(id) {
+    guard();
+    const cids = new Set(db.challenges.filter(c => c.moduleId === id).map(c => c.id));
+    db.challenges = db.challenges.filter(c => c.moduleId !== id);
+    for (const uid in db.results) cids.forEach(c => { delete db.results[uid][c]; });
+    db.quizAttempts = db.quizAttempts.filter(a => a.moduleId !== id);
+    db.achievements.forEach(a => { if (a.moduleId === id) { a.moduleId = null; if (a.criteria === 'module_complete') a.active = false; } });
+    db.modules = db.modules.filter(m => m.id !== id);
+    logAct('admin.module_deleted', { id });
+    saveDb();
+    return ok({ toast: 'Module deleted.' });
+  },
+  challengeData(mod, f) {
+    const title = String(f.title || '').trim();
+    if (!title || title.length > 160) return { error: 'Title is required (max 160 characters).' };
+    if (!ChallengeSchema.TYPES.includes(f.type)) return { error: 'Choose a challenge type.' };
+    if (mod.type === 'quiz' && f.type !== 'mcq') return { error: 'Quizzes only support multiple-choice questions.' };
+    const points = Number(f.points), position = Number(f.position);
+    if (!Number.isInteger(points) || points < 0 || points > 500) return { error: 'Points must be 0–500.' };
+    if (!Number.isInteger(position) || position < 0 || position > 1000) return { error: 'Position must be 0–1000.' };
+    const errs = ChallengeSchema.validate(f.type, f.payload, f.answer);
+    if (errs.length) return { error: errs.join(' ') };
+    return { v: { type: f.type, title, prompt: String(f.prompt || '').slice(0, 5000), payload: f.payload || {}, answer: f.answer || {}, explanation: String(f.explanation || '').slice(0, 3000), points, position, published: !!f.published } };
+  },
+  createChallenge(moduleId, f) {
+    guard();
+    const mod = db.modules.find(m => m.id === moduleId);
+    if (!mod) return fail('Module not found.');
+    const r = this.challengeData(mod, f);
+    if (r.error) return fail(r.error);
+    if (db.challenges.some(c => c.moduleId === moduleId && c.title === r.v.title)) return fail('This module already has a challenge with that title.');
+    db.challenges.push({ id: nid(), moduleId, ...r.v });
+    logAct('admin.challenge_created', { module: moduleId });
+    saveDb();
+    return ok({ toast: 'Challenge created.' });
+  },
+  updateChallenge(id, f) {
+    guard();
+    const c = db.challenges.find(x => x.id === id);
+    if (!c) return fail('Not found.');
+    const mod = db.modules.find(m => m.id === c.moduleId);
+    const r = this.challengeData(mod, f);
+    if (r.error) return fail(r.error);
+    if (db.challenges.some(x => x.moduleId === c.moduleId && x.title === r.v.title && x.id !== id)) return fail('This module already has a challenge with that title.');
+    Object.assign(c, r.v);
+    logAct('admin.challenge_updated', { id });
+    saveDb();
+    return ok({ toast: 'Challenge saved.' });
+  },
+  setChallengePublished(id, published) {
+    guard();
+    const c = db.challenges.find(x => x.id === id);
+    if (!c) return fail('Not found.');
+    c.published = !!published;
+    logAct('admin.challenge_updated', { id, published: c.published });
+    saveDb();
+    return ok({ toast: published ? 'Challenge published.' : 'Challenge unpublished.' });
+  },
+  deleteChallenge(id) {
+    guard();
+    for (const uid in db.results) delete db.results[uid][id];
+    db.challenges = db.challenges.filter(c => c.id !== id);
+    logAct('admin.challenge_deleted', { id });
+    saveDb();
+    return ok({ toast: 'Challenge deleted.' });
+  },
+
+  /* ---------- backup / restore ---------- */
+  exportDb() { guard(); logAct('admin.backup_exported', {}); saveDb(); return JSON.stringify(db); },
+  importDb(text) {
+    guard();
+    let d;
+    try { d = JSON.parse(text); } catch (e) { return fail('That file is not valid JSON.'); }
+    const arrays = ['users', 'modules', 'challenges', 'quizAttempts', 'achievements', 'userAch', 'adjustments', 'notifs', 'logs'];
+    if (!d || d.v !== 2 || arrays.some(k => !Array.isArray(d[k])) || typeof d.results !== 'object' || !d.users.some(u => u.role === 'admin' && u.active)) return fail('This is not a valid CyberShield backup (or it has no active administrator).');
+    db = d; db.labs = db.labs || {}; db.resets = db.resets || {}; db.locks = db.locks || {};
+    let maxId = 100;
+    [db.users, db.modules, db.challenges, db.quizAttempts, db.achievements, db.adjustments, db.notifs, db.logs].forEach(list => list.forEach(x => { if (x && Number.isInteger(x.id) && x.id > maxId) maxId = x.id; }));
+    db.seq = Math.max(Number(db.seq) || 100, maxId + 1);
+    saveDb();
+    return ok();
+  },
+  resetAll() { guard(); try { localStorage.removeItem(DB_KEY); localStorage.removeItem(SES_KEY); } catch (e) { /* ignore */ } return ok(); }
+};
+
+/* ================================================================
+   Admin – screens
+   ================================================================ */
+
+function adminPage(r) {
+  guard();
+  switch (r[1]) {
+    case 'students': return adminStudents();
+    case 'content': return r[2] ? adminChallenges(Number(r[2])) : adminModules();
+    case 'achievements': return adminAchievements();
+    case 'reports': return adminReports();
+    case 'activity': return adminActivity();
+    case 'data': return adminData();
+    default: return adminOverview();
+  }
+}
+
+/* generic form dialog */
+function formModal({ title, fields, submit = 'Save', onSubmit, wide }) {
+  const err = h('div', { class: 'alert', role: 'alert' });
+  const inputs = {};
+  const rows = fields.map(f => {
+    let el;
+    if (f.type === 'select') el = selectEl(f.options, f.value);
+    else if (f.type === 'textarea') el = h('textarea', { rows: f.rows || 4, maxlength: f.max || 5000, value: f.value ?? '', spellcheck: 'false' });
+    else if (f.type === 'checkbox') el = h('input', { type: 'checkbox', checked: !!f.value });
+    else el = h('input', { type: f.type || 'text', value: f.value ?? '', maxlength: f.max || 254, autocomplete: 'off', ...(f.attrs || {}) });
+    inputs[f.key] = el;
+    return f.type === 'checkbox' ? h('label', { class: 'chk' }, el, f.label) : field(f.label, el, f.hint);
+  });
+  const get = () => Object.fromEntries(Object.entries(inputs).map(([k, el]) => [k, el.type === 'checkbox' ? el.checked : el.value]));
+  const m = modal(title, h('form', { novalidate: true, onsubmit: async e => {
+    e.preventDefault();
+    let r;
+    try { r = await onSubmit(get()); } catch (ex) { r = { ok: false, error: ex.message }; }
+    if (!r || !r.ok) { err.textContent = (r && r.error) || 'Could not save.'; err.className = 'alert show err'; return; }
+    m.close();
+    if (r.toast) toast(r.toast);
+    rerender();
+  } }, rows, err, h('div', { class: 'btn-row' }, h('button', { type: 'button', class: 'btn ghost', onclick: () => m.close() }, 'Cancel'), h('button', { type: 'submit', class: 'btn' }, submit))), { wide });
+  return { m, inputs };
+}
+const act = async (fn, after) => { try { const r = await fn(); if (!r.ok) toast(r.error, true); else { if (r.toast) toast(r.toast); if (after) after(r); else rerender(); } return r; } catch (e) { toast(e.message, true); return { ok: false }; } };
+function download(name, text, type) {
+  const a = h('a', { href: URL.createObjectURL(new Blob([text], { type })), download: name });
+  document.body.append(a); a.click(); a.remove();
+}
+
+/* ---------------- overview ---------------- */
+function adminOverview() {
+  const s = Admin.stats();
+  const max = Math.max(1, ...s.registrations.map(x => x.count));
+  const desc = l => `${l.action}${l.details && Object.keys(l.details).length ? ' · ' + JSON.stringify(l.details) : ''}`;
+  return h('div', null, h('section', { class: 'hello' }, h('h2', null, 'Administrator ', h('span', { class: 'grad' }, 'overview')), h('p', null, 'Live statistics from the records stored in this browser.')),
+    h('section', { class: 'grid stats' }, statCard('👥', s.students, `Students (${s.activeStudents} active)`), statCard('🟢', s.active7d, 'Active in last 7 days'), statCard('🆕', s.new7d, 'New in last 7 days'), statCard('✅', s.completions, 'Challenge completions'), statCard('🧠', s.avgQuiz === null ? '—' : s.avgQuiz + '%', `Average quiz score (${s.quizAttempts} attempts)`), statCard('📚', `${s.modules} / ${s.challenges}`, 'Published modules / challenges')),
+    h('section', { class: 'grid cols' },
+      card('New registrations (last 14 days)', h('div', { class: 'bars' }, s.registrations.map(x => h('div', { class: 'bcol', title: `${x.label}: ${x.count}` }, h('span', { class: 'bval' }, String(x.count)), h('div', { class: 'bfill', style: `height:${Math.round(x.count * 100 / max)}%` }), h('span', { class: 'blbl' }, x.label.replace(/^\w+ /, ''))))), h('p', { class: 'hint' }, 'Quick links: ', h('a', { href: '#/admin/students' }, 'Manage students'), ' · ', h('a', { href: '#/admin/content' }, 'Edit content'), ' · ', h('a', { href: '#/admin/reports' }, 'Reports'))),
+      card('Recent activity', h('ul', { class: 'list' }, s.recent.map(l => h('li', null, h('span', null, h('b', null, userName(l.uid)), ' — ', desc(l)), h('span', { class: 'time' }, ago(l.at)))), s.recent.length ? null : h('li', { class: 'empty' }, 'Nothing yet.')))));
+}
+
+/* ---------------- students & users ---------------- */
+const stuFilter = { search: '', role: '', status: '', course: '', sort: 'name', page: 1 };
+function adminStudents() {
+  const box = h('div');
+  const draw = () => {
+    const r = Admin.users(stuFilter, stuFilter.page);
+    stuFilter.page = r.page;
+    box.replaceChildren(h('p', { class: 'hint' }, `${r.count} account(s) match.`),
+      table(['Name', 'Email / ID', 'Course', 'Role', 'Status', 'Points', 'Done', 'Last login', ''], r.rows.map(({ u, points, completed }) => [
+        h('b', null, u.name, u.sample ? ' (sample)' : ''), h('div', null, u.email, h('div', { class: 'hint' }, u.sid)), u.course || '—', pill(u.role, u.role === 'admin' ? 'warn' : ''), pill(u.active ? 'active' : 'disabled', u.active ? 'ok' : 'bad'), u.role === 'student' ? String(points) : '—', u.role === 'student' ? String(completed) : '—', u.lastLogin ? ago(u.lastLogin) : 'never',
+        h('div', { class: 'row-actions' }, h('button', { class: 'btn ghost sm', onclick: () => openStudent(u.id) }, 'View'), h('button', { class: 'btn ghost sm', onclick: () => editUser(u) }, 'Edit'), h('button', { class: 'btn danger sm', onclick: async () => { if (await confirmBox(`Delete ${u.name}? All of their progress will be removed.`, 'Delete')) act(() => Admin.deleteUser(u.id), () => draw()); } }, 'Delete'))])), pager(r.page, r.pages, p => { stuFilter.page = p; draw(); }));
+  };
+  const bind = (key, el, ev = 'input') => { el.addEventListener(ev, () => { stuFilter[key] = el.value; stuFilter.page = 1; draw(); }); return el; };
+  draw();
+  return h('div', null, h('h2', null, '👥 Students & users'),
+    h('div', { class: 'toolbar' },
+      bind('search', h('input', { type: 'search', placeholder: 'Search name, email or ID…', value: stuFilter.search, maxlength: 80 })),
+      bind('role', selectEl([['', 'All roles'], ['student', 'Students'], ['admin', 'Admins']], stuFilter.role), 'change'),
+      bind('status', selectEl([['', 'Any status'], ['active', 'Active'], ['disabled', 'Disabled']], stuFilter.status), 'change'),
+      bind('course', selectEl([['', 'All courses'], ...COURSES], stuFilter.course), 'change'),
+      bind('sort', selectEl([['name', 'Sort: name'], ['points', 'Sort: points'], ['recent', 'Sort: last login'], ['newest', 'Sort: newest']], stuFilter.sort), 'change')),
+    h('div', { class: 'btn-row left' },
+      h('button', { class: 'btn sm', onclick: () => createUserDialog() }, '➕ New account'),
+      h('button', { class: 'btn ghost sm', onclick: () => download('cybershield-students.csv', Admin.studentsCsv(), 'text/csv') }, '⬇ Export CSV'),
+      db.users.some(u => u.sample) ? h('button', { class: 'btn ghost sm', onclick: () => act(() => Admin.removeSamples()) }, '🧹 Remove sample students') : h('button', { class: 'btn ghost sm', onclick: () => act(() => Admin.loadSamples()) }, '🧪 Load sample students')),
+    card(null, box));
+}
+function userFields(u) {
+  return [
+    { key: 'name', label: 'Full name', value: u ? u.name : '', max: 60 }, { key: 'email', label: 'Email', type: 'email', value: u ? u.email : '' },
+    { key: 'sid', label: 'Student ID', value: u ? u.sid : '', max: 20 }, { key: 'course', label: 'Course', type: 'select', options: [['', '—'], ...COURSES], value: u ? u.course : '' },
+    { key: 'role', label: 'Role', type: 'select', options: [['student', 'Student'], ['admin', 'Administrator']], value: u ? u.role : 'student' }];
+}
+function createUserDialog() {
+  formModal({ title: 'New account', submit: 'Create', fields: [...userFields(null), { key: 'password', label: 'Temporary password', type: 'password', max: 64, hint: '8+ chars with upper, lower, number and symbol. The user can change it in their profile.' }], onSubmit: v => Admin.createUser(v) });
+}
+function editUser(u) {
+  formModal({ title: 'Edit account', fields: [...userFields(u), { key: 'active', label: 'Account is active (can log in)', type: 'checkbox', value: u.active }], onSubmit: v => Admin.updateUser(u.id, v) });
+}
+function openStudent(id) {
+  const box = h('div');
+  const mm = modal('Account details', box, { wide: true });
+  const draw = () => {
+    const u = db.users.find(x => x.id === id);
+    if (!u) { mm.close(); return; }
+    const res = db.results[id] || {};
+    const rows = db.challenges.filter(c => res[c.id]).map(c => { const r = res[c.id], m = db.modules.find(x => x.id === c.moduleId); return [m ? m.title : '?', c.title, c.type, String(r.attempts), String(r.wrong), String(r.points), r.done ? fmtDate(r.done) : 'in progress']; });
+    const quizzes = db.quizAttempts.filter(a => a.uid === id).slice(-10).reverse().map(a => { const m = db.modules.find(x => x.id === a.moduleId); return [m ? m.title : '?', `${a.score}/${a.total}`, fmtDate(a.at)]; });
+    const have = db.userAch.filter(x => x.uid === id);
+    const pointsIn = h('input', { type: 'number', min: -1000, max: 1000, placeholder: '+/- points' }), reasonIn = h('input', { type: 'text', maxlength: 200, placeholder: 'Reason (required)' });
+    const grantSel = selectEl([['', 'Grant achievement…'], ...db.achievements.filter(a => !have.some(x => x.aid === a.id)).map(a => [a.id, `${a.icon} ${a.name}`])], '');
+    box.replaceChildren(
+      h('div', { class: 'kv' }, h('span', null, 'Name'), h('b', null, u.name), h('span', null, 'Email'), h('b', null, u.email), h('span', null, 'Student ID'), h('b', null, u.sid || '—'), h('span', null, 'Course'), h('b', null, u.course || '—'), h('span', null, 'Role / status'), h('b', null, `${u.role} · ${u.active ? 'active' : 'disabled'}`), h('span', null, 'Points / rank'), h('b', null, u.role === 'student' ? `${total(id)} · #${rankOf(id) || '—'}` : '—'), h('span', null, 'Registered'), h('b', null, fmtDate(u.created)), h('span', null, 'Last login'), h('b', null, fmtDate(u.lastLogin))),
+      h('div', { class: 'btn-row left' },
+        u.sample ? null : h('button', { class: 'btn sm', onclick: async () => { const r = await Admin.resetCode(id).catch(e => fail(e.message)); if (!r.ok) return toast(r.error, true); modal('One-time reset code', h('div', null, h('p', null, 'Give this code to the student. It works once, for 30 minutes:'), h('div', { class: 'code-big' }, r.code), h('p', { class: 'hint' }, 'They enter it on the login page → Reset tab, with their email address. It will not be shown again.'))); } }, '🔑 Create reset code'),
+        u.role === 'student' ? h('button', { class: 'btn ghost sm', onclick: async () => { if (await confirmBox('Erase this student\'s progress, quiz attempts, achievements and lab data?', 'Reset')) act(() => Admin.resetProgress(id), draw); } }, '↺ Reset progress') : null),
+      u.role === 'student' ? h('div', { class: 'inline-form' }, h('b', null, 'Adjust points'), pointsIn, reasonIn, h('button', { class: 'btn sm', onclick: () => act(() => Admin.adjustPoints(id, pointsIn.value, reasonIn.value), draw) }, 'Apply')) : null,
+      u.role === 'student' ? h('div', { class: 'inline-form' }, h('b', null, 'Achievements'), grantSel, h('button', { class: 'btn sm', onclick: () => { if (grantSel.value) act(() => Admin.grantAchievement(Number(grantSel.value), id), draw); } }, 'Grant')) : null,
+      have.length ? h('div', { class: 'chips' }, have.map(x => { const a = db.achievements.find(y => y.id === x.aid); return a ? h('span', { class: 'chip2' }, `${a.icon} ${a.name} `, h('button', { class: 'x', 'aria-label': 'Revoke', onclick: () => act(() => Admin.revokeAchievement(a.id, id), draw) }, '✕')) : null; })) : null,
+      u.role === 'student' ? h('div', null, h('h4', null, 'Challenge results'), table(['Module', 'Challenge', 'Type', 'Tries', 'Wrong', 'Pts', 'Status'], rows), h('h4', null, 'Quiz attempts'), table(['Quiz', 'Score', 'When'], quizzes),
+        h('h4', null, 'Point adjustments'), table(['Points', 'Reason', 'By', 'When'], db.adjustments.filter(a => a.uid === id).slice().reverse().map(a => [(a.points > 0 ? '+' : '') + a.points, a.reason, a.adminId ? userName(a.adminId) : 'system', fmtDate(a.at)]))) : null,
+      h('h4', null, 'Recent activity'), table(['Action', 'Details', 'When'], db.logs.filter(l => l.uid === id).slice(0, 15).map(l => [l.action, JSON.stringify(l.details), fmtDate(l.at)])));
+  };
+  draw();
+}
+
+/* ---------------- modules ---------------- */
+function adminModules() {
+  const mods = db.modules.slice().sort((a, b) => a.position - b.position || a.id - b.id);
+  return h('div', null, h('h2', null, '📚 Learning modules & quizzes'), h('p', { class: 'muted' }, 'Create, edit, publish and delete modules. Open a module to manage its challenges / quiz questions.'),
+    h('div', { class: 'btn-row left' }, h('button', { class: 'btn sm', onclick: () => moduleDialog(null) }, '➕ New module')),
+    card(null, table(['Module', 'Type', 'Challenges', 'Status', ''], mods.map(m => [h('div', null, h('b', null, m.icon + ' ' + m.title), h('div', { class: 'hint' }, m.slug)), m.type, String(db.challenges.filter(c => c.moduleId === m.id).length), pill(m.published ? 'published' : 'draft', m.published ? 'ok' : 'warn'),
+      h('div', { class: 'row-actions' }, h('a', { class: 'btn sm', href: '#/admin/content/' + m.id }, 'Challenges'), h('button', { class: 'btn ghost sm', onclick: () => moduleDialog(m) }, 'Edit'), h('button', { class: 'btn ghost sm', onclick: () => act(() => Admin.setModulePublished(m.id, !m.published)) }, m.published ? 'Unpublish' : 'Publish'), h('button', { class: 'btn danger sm', onclick: async () => { if (await confirmBox(`Delete "${m.title}" with all its challenges and student results?`, 'Delete')) act(() => Admin.deleteModule(m.id)); } }, 'Delete'))]))));
+}
+function moduleDialog(m) {
+  formModal({ title: m ? 'Edit module' : 'New module', wide: true, fields: [
+    { key: 'title', label: 'Title', value: m ? m.title : '', max: 120 }, { key: 'slug', label: 'URL slug', value: m ? m.slug : '', hint: 'lowercase letters, numbers, dashes' },
+    { key: 'icon', label: 'Icon (emoji)', value: m ? m.icon : '📘', max: 16 }, { key: 'summary', label: 'Short summary', value: m ? m.summary : '', max: 300 },
+    { key: 'type', label: 'Type', type: 'select', options: [['lab', 'Lab (mixed challenges)'], ['quiz', 'Quiz (multiple choice, graded together)']], value: m ? m.type : 'lab' },
+    { key: 'position', label: 'Order (0 = first)', type: 'number', value: m ? m.position : db.modules.length + 1, attrs: { min: 0, max: 1000 } },
+    { key: 'lesson', label: 'Lesson text', type: 'textarea', rows: 12, max: 60000, value: m ? m.lesson : '', hint: 'Markup: "# Heading", "- list item", lines between ``` for code, blank line = new paragraph.' },
+    { key: 'published', label: 'Published (visible to students)', type: 'checkbox', value: m ? m.published : false }],
+  onSubmit: v => (m ? Admin.updateModule(m.id, v) : Admin.createModule(v)) });
+}
+
+/* ---------------- challenges ---------------- */
+const EXAMPLES = {
+  mcq: { payload: { options: ['Option A', 'Option B', 'Option C', 'Option D'] }, answer: { correct: 0 } },
+  phish: { payload: { kind: 'email', from: 'Sender Name <sender@example.test>', to: 'you@student.edu', subject: 'Subject line', body: ['First paragraph.', 'Second paragraph.'], links: [{ text: 'Click here', url: 'https://example.test/path' }], attachment: '' }, answer: { verdict: 'phishing', flags: ['sender', 'urgency', 'link'] } },
+  sqli: { payload: { template: "SELECT * FROM users WHERE username = '{username}' AND password = '{password}'", fields: [{ name: 'username', label: 'Username' }, { name: 'password', label: 'Password' }], hint: 'Optional hint text' }, answer: { goal: 'login_admin' } },
+  cookie: { payload: { scenario: 'Describe the situation the student must configure a cookie for.' }, answer: { httponly: true, secure: true, samesite: ['Lax', 'Strict'], lifetime: ['session', 'short'] } },
+  csrf_lab: { payload: {}, answer: {} }
+};
+const TYPE_LABELS = { mcq: 'Multiple choice', phish: 'Phishing sample', sqli: 'SQL injection exercise', cookie: 'Cookie scenario', csrf_lab: 'CSRF lab' };
+function adminChallenges(moduleId) {
+  const m = db.modules.find(x => x.id === moduleId);
+  if (!m) return card('Module not found', h('a', { class: 'btn sm', href: '#/admin/content' }, '← Back'));
+  const list = db.challenges.filter(c => c.moduleId === m.id).sort((a, b) => a.position - b.position || a.id - b.id);
+  return h('div', null, h('p', null, h('a', { href: '#/admin/content' }, '← All modules')), h('h2', null, `${m.icon} ${m.title}`), h('p', { class: 'muted' }, m.type === 'quiz' ? 'Quiz questions (multiple choice only).' : 'Challenges shown to students in this module.'),
+    h('div', { class: 'btn-row left' }, h('button', { class: 'btn sm', onclick: () => challengeDialog(m, null) }, '➕ New ' + (m.type === 'quiz' ? 'question' : 'challenge'))),
+    card(null, table(['Challenge', 'Type', 'Points', 'Status', ''], list.map(c => [h('b', null, c.title), TYPE_LABELS[c.type] || c.type, String(c.points), pill(c.published ? 'published' : 'draft', c.published ? 'ok' : 'warn'),
+      h('div', { class: 'row-actions' }, h('button', { class: 'btn ghost sm', onclick: () => challengeDialog(m, c) }, 'Edit'), h('button', { class: 'btn ghost sm', onclick: () => act(() => Admin.setChallengePublished(c.id, !c.published)) }, c.published ? 'Unpublish' : 'Publish'), h('button', { class: 'btn danger sm', onclick: async () => { if (await confirmBox(`Delete "${c.title}"? Student results for it are removed.`, 'Delete')) act(() => Admin.deleteChallenge(c.id)); } }, 'Delete'))]))));
+}
+function challengeDialog(m, c) {
+  const err = h('div', { class: 'alert', role: 'alert' });
+  const allowed = m.type === 'quiz' ? ['mcq'] : ChallengeSchema.TYPES;
+  const typeSel = selectEl(allowed.map(t => [t, TYPE_LABELS[t]]), c ? c.type : allowed[0]);
+  const title = h('input', { type: 'text', value: c ? c.title : '', maxlength: 160 }), prompt = h('textarea', { rows: 2, maxlength: 5000, value: c ? c.prompt : '' }), expl = h('textarea', { rows: 3, maxlength: 3000, value: c ? c.explanation : '' });
+  const points = h('input', { type: 'number', min: 0, max: 500, value: c ? c.points : 10 }), position = h('input', { type: 'number', min: 0, max: 1000, value: c ? c.position : db.challenges.filter(x => x.moduleId === m.id).length + 1 });
+  const pub = h('input', { type: 'checkbox', checked: c ? c.published : true });
+  const typeBox = h('div');
+  let opts, correct, pj, aj;
+  const drawType = () => {
+    const t = typeSel.value;
+    const base = c && c.type === t ? c : null;
+    if (t === 'mcq') {
+      opts = h('textarea', { rows: 5, maxlength: 1500, value: base ? base.payload.options.join('\n') : 'Option A\nOption B\nOption C\nOption D' });
+      correct = h('input', { type: 'number', min: 1, max: 6, value: base ? base.answer.correct + 1 : 1 });
+      typeBox.replaceChildren(field('Answer options (one per line, 2–6)', opts), field('Number of the correct option (1 = first line)', correct));
+    } else {
+      const ex = base || EXAMPLES[t];
+      pj = h('textarea', { rows: 8, maxlength: 20000, spellcheck: 'false', class: 'mono', value: JSON.stringify(ex.payload, null, 2) });
+      aj = h('textarea', { rows: 5, maxlength: 5000, spellcheck: 'false', class: 'mono', value: JSON.stringify(ex.answer, null, 2) });
+      typeBox.replaceChildren(h('p', { class: 'hint' }, t === 'csrf_lab' ? 'The CSRF lab needs no extra settings.' : 'Edit the JSON below. It starts from a working example for this type. The server-side validator checks it when you save.'),
+        t === 'csrf_lab' ? null : [field('Content (JSON)', pj), field('Correct answer / rules (JSON)', aj)]);
+    }
+  };
+  typeSel.addEventListener('change', drawType);
+  drawType();
+  const mm = modal(c ? 'Edit challenge' : 'New challenge', h('form', { novalidate: true, onsubmit: e => {
+    e.preventDefault();
+    const t = typeSel.value;
+    let payload, answer;
+    try {
+      if (t === 'mcq') {
+        payload = { options: opts.value.split('\n').map(x => x.trim()).filter(Boolean) };
+        answer = { correct: parseInt(correct.value, 10) - 1 };
+      } else if (t === 'csrf_lab') { payload = {}; answer = {}; } else { payload = JSON.parse(pj.value); answer = JSON.parse(aj.value); }
+    } catch (ex) { err.textContent = 'The JSON is not valid: ' + ex.message; err.className = 'alert show err'; return; }
+    const f = { type: t, title: title.value, prompt: prompt.value, payload, answer, explanation: expl.value, points: points.value, position: position.value, published: pub.checked };
+    let r;
+    try { r = c ? Admin.updateChallenge(c.id, f) : Admin.createChallenge(m.id, f); } catch (ex) { r = fail(ex.message); }
+    if (!r.ok) { err.textContent = r.error; err.className = 'alert show err'; return; }
+    mm.close(); toast(r.toast); rerender();
+  } }, field('Type', typeSel), field('Title', title), field('Prompt / question text', prompt), typeBox, field('Explanation shown after answering', expl), h('div', { class: 'row2' }, field('Points (0–500)', points), field('Order', position)), h('label', { class: 'chk' }, pub, 'Published'), err,
+    h('div', { class: 'btn-row' }, h('button', { type: 'button', class: 'btn ghost', onclick: () => mm.close() }, 'Cancel'), h('button', { type: 'submit', class: 'btn' }, 'Save'))), { wide: true });
+}
+
+/* ---------------- achievements ---------------- */
+function adminAchievements() {
+  const count = id => db.userAch.filter(x => x.aid === id).length;
+  return h('div', null, h('h2', null, '🎖️ Achievements'), h('p', { class: 'muted' }, 'Awarded automatically when a student meets the criteria. You can also grant or revoke them manually.'),
+    h('div', { class: 'btn-row left' }, h('button', { class: 'btn sm', onclick: () => achievementDialog(null) }, '➕ New achievement')),
+    card(null, table(['Achievement', 'Criteria', 'Earned by', 'Status', ''], db.achievements.map(a => [h('div', null, h('b', null, a.icon + ' ' + a.name), h('div', { class: 'hint' }, a.description)), a.criteria + (a.value ? ' ≥ ' + a.value : '') + (a.moduleId ? ' · ' + ((db.modules.find(m => m.id === a.moduleId) || {}).title || '?') : ''), String(count(a.id)), pill(a.active ? 'active' : 'off', a.active ? 'ok' : 'warn'),
+      h('div', { class: 'row-actions' }, h('button', { class: 'btn ghost sm', onclick: () => grantDialog(a) }, 'Grant'), h('button', { class: 'btn ghost sm', onclick: () => achievementDialog(a) }, 'Edit'), h('button', { class: 'btn danger sm', onclick: async () => { if (await confirmBox(`Delete "${a.name}"? Students lose this badge.`, 'Delete')) act(() => Admin.deleteAchievement(a.id)); } }, 'Delete'))]))));
+}
+function achievementDialog(a) {
+  formModal({ title: a ? 'Edit achievement' : 'New achievement', fields: [
+    { key: 'name', label: 'Name', value: a ? a.name : '', max: 80 }, { key: 'slug', label: 'Slug', value: a ? a.slug : '', hint: 'lowercase letters, numbers, dashes' }, { key: 'icon', label: 'Icon (emoji)', value: a ? a.icon : '🏅', max: 16 },
+    { key: 'description', label: 'Description', value: a ? a.description : '', max: 200 },
+    { key: 'criteria', label: 'Awarded when…', type: 'select', value: a ? a.criteria : 'points_at_least', options: [['first_login', 'Student joins'], ['module_complete', 'Module completed (choose module)'], ['points_at_least', 'Points reach a value'], ['challenges_at_least', 'Challenges completed reach a value'], ['perfect_quiz', 'Perfect quiz score (optionally for a module)'], ['all_modules', 'All published modules completed'], ['manual', 'Only granted manually']] },
+    { key: 'value', label: 'Value (for points / challenges criteria)', type: 'number', value: a && a.value ? a.value : '', attrs: { min: 1 } },
+    { key: 'moduleId', label: 'Module (for module / quiz criteria)', type: 'select', value: a && a.moduleId ? a.moduleId : '', options: [['', '—'], ...db.modules.map(m => [m.id, m.title])] },
+    { key: 'active', label: 'Active', type: 'checkbox', value: a ? a.active : true }], onSubmit: v => (a ? Admin.updateAchievement(a.id, v) : Admin.createAchievement(v)) });
+}
+function grantDialog(a) {
+  const students = db.users.filter(u => u.role === 'student').sort((x, y) => x.name.localeCompare(y.name));
+  formModal({ title: `Grant "${a.name}"`, submit: 'Grant', fields: [{ key: 'uid', label: 'Student', type: 'select', value: '', options: [['', 'Choose…'], ...students.map(s => [s.id, `${s.name} (${s.email})`])] }], onSubmit: v => Admin.grantAchievement(a.id, Number(v.uid)) });
+}
+
+/* ---------------- reports ---------------- */
+function adminReports() {
+  const r = Admin.reports();
+  return h('div', null, h('h2', null, '📈 Reports'), h('div', { class: 'btn-row left' }, h('button', { class: 'btn ghost sm', onclick: () => download('cybershield-students.csv', Admin.studentsCsv(), 'text/csv') }, '⬇ Download student report (CSV)')),
+    card('Module completion', table(['Module', 'Challenges', 'Students started', 'Students completed'], r.modules.map(m => [`${m.icon} ${m.title}${m.published ? '' : ' (draft)'}`, String(m.challenges), String(m.started), String(m.completed)]))),
+    card('Challenge difficulty', table(['Challenge', 'Module', 'Attempted by', 'Solved by', 'Success rate', 'Avg tries'], r.challenges.map(c => [c.title, c.module, String(c.attempted), String(c.solved), c.rate === null ? '—' : c.rate + '%', String(c.avg)]))),
+    card('Quiz performance', table(['Quiz', 'Attempts', 'Average', 'Best'], r.quizzes.map(q => [q.title, String(q.attempts), q.avg === null ? '—' : q.avg + '%', q.best === null ? '—' : q.best + '%']))));
+}
+
+/* ---------------- activity log ---------------- */
+const actFilter = { action: '', search: '', page: 1 };
+function adminActivity() {
+  const box = h('div');
+  const draw = () => {
+    const r = Admin.activity(actFilter, actFilter.page);
+    actFilter.page = r.page;
+    box.replaceChildren(h('p', { class: 'hint' }, `${r.count} record(s).`), table(['When', 'User', 'Action', 'Details'], r.rows.map(l => [fmtDate(l.at), userName(l.uid), l.action, JSON.stringify(l.details)])), pager(r.page, r.pages, p => { actFilter.page = p; draw(); }));
+  };
+  draw();
+  const actions = ['', 'auth.', 'admin.', 'challenge.', 'quiz.', 'achievement.', 'security.', 'profile.'];
+  return h('div', null, h('h2', null, '🧾 Activity log'), h('div', { class: 'toolbar' },
+    h('input', { type: 'search', placeholder: 'Search by user name or email…', value: actFilter.search, maxlength: 80, oninput: e => { actFilter.search = e.target.value; actFilter.page = 1; draw(); } }),
+    selectEl(actions.map(a => [a, a ? a + '*' : 'All actions']), actFilter.action, { onchange: e => { actFilter.action = e.target.value; actFilter.page = 1; draw(); } })), card(null, box));
+}
+
+/* ---------------- backup & data ---------------- */
+function adminData() {
+  const size = (() => { try { return Math.round(JSON.stringify(db).length / 1024); } catch (e) { return 0; } })();
+  const file = h('input', { type: 'file', accept: 'application/json,.json' });
+  return h('div', null, h('h2', null, '💾 Backup & data'),
+    card('Where is my data?', h('p', null, `All accounts, scores and settings live in THIS browser's storage (about ${size} KB now). It survives closing the browser, but it is lost if you clear site data or switch browser/device. Download a backup regularly.`),
+      h('p', { class: 'hint' }, `Records: ${db.users.length} accounts · ${db.modules.length} modules · ${db.challenges.length} challenges · ${db.quizAttempts.length} quiz attempts · ${db.logs.length} log entries.`)),
+    card('Download a backup', h('p', null, 'Saves everything (including password hashes) to a JSON file. Keep it private.'), h('button', { class: 'btn sm', onclick: () => download(`cybershield-backup-${new Date().toISOString().slice(0, 10)}.json`, Admin.exportDb(), 'application/json') }, '⬇ Download backup')),
+    card('Restore from a backup', h('p', null, 'Replaces ALL current data with the file you choose.'), file, h('div', { class: 'btn-row left' }, h('button', { class: 'btn ghost sm', onclick: async () => {
+      const f = file.files[0];
+      if (!f) return toast('Choose a backup file first.', true);
+      if (f.size > 8 * 1024 * 1024) return toast('That file is too large.', true);
+      if (!(await confirmBox('Replace all current data with this backup?', 'Restore'))) return;
+      const text = await f.text();
+      const r = Admin.importDb(text);
+      if (!r.ok) return toast(r.error, true);
+      endSession(); toast('Backup restored. Please log in again.'); go('/'); render();
+    } }, 'Restore'))),
+    card('⚠️ Reset everything', h('p', null, 'Deletes every account, score and custom content in this browser and returns to first-time setup.'), h('button', { class: 'btn danger sm', onclick: () => {
+      const input = h('input', { type: 'text', placeholder: 'Type DELETE', autocomplete: 'off' });
+      const mm = modal('Reset all data', h('div', null, h('p', null, 'This cannot be undone. Type DELETE to confirm.'), input, h('div', { class: 'btn-row' }, h('button', { class: 'btn ghost', onclick: () => mm.close() }, 'Cancel'), h('button', { class: 'btn danger', onclick: () => { if (input.value !== 'DELETE') return toast('Type DELETE exactly.', true); Admin.resetAll(); db = freshDb(); mm.close(); go('/'); render(); } }, 'Erase everything'))));
+    } }, 'Erase all data')),
+    card('Security notes for administrators', h('ul', { class: 'plain' },
+      h('li', null, 'This version runs entirely in the browser. Passwords are salted and hashed (PBKDF2) and every admin action re-checks the role, but anyone with access to this browser\'s developer tools can edit the stored data.'),
+      h('li', null, 'Use it for classroom practice and demonstrations. For a graded, shared or internet-facing deployment you need a real server and database (accounts and scores checked on the server).'),
+      h('li', null, 'Leaderboards only include accounts stored in this same browser.'))));
+}
+
+/* ================================================================
+   Boot
+   ================================================================ */
+(function boot() {
+  db = loadDb();
+  saveDb();
+  window.addEventListener('hashchange', render);
+  window.addEventListener('storage', e => { if (e.key === DB_KEY || e.key === SES_KEY) { db = loadDb(); render(); } });
+  render();
+})();
+
+  </script>
+</body>
+</html>
